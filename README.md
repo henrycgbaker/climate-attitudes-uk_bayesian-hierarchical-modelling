@@ -1,5 +1,9 @@
 # Mapping Multidimensional Climate Attitudes in Britain
 
+[![Paper - Substantive](https://img.shields.io/badge/Paper-Substantive_Findings-2ea44f)](paper/main_substantive.pdf)
+[![Paper - Technical](https://img.shields.io/badge/Paper-Full_Methodology-0969da)](paper/main_technical.pdf)
+![Submitted](https://img.shields.io/badge/Submitted-June_2025-grey)
+
 A Bayesian hierarchical latent trait model for analysing UK public attitudes toward climate policy.
 
 ## Overview
