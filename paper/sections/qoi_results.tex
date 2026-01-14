@@ -1,0 +1,170 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage[top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{multirow,booktabs,graphicx,enumerate,float,fancyhdr,amsmath,amssymb,tcolorbox,xcolor,array,makecell}
+\setlength{\parindent}{0in}
+\setlength{\parskip}{1em}
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\footnotesize Bayesian Modelling - Research Note: Qoi Plots}
+\rhead{\footnotesize Henry Baker}
+\cfoot{\footnotesize \thepage}
+\newtcolorbox{redbox}{colback=red!10!white,colframe=red!80!black,fonttitle=\bfseries,title=NB!,sharp corners}
+\begin{document}
+
+\section{Metrics}
+
+\subsection{Individual covariate effects}
+\begin{table}[ht]
+  \centering
+  \caption{Posterior mean covariate effects on latent traits.}
+  \label{tab:covariate_effects}
+  \begin{tabular}{lccc}
+    \toprule
+    Covariate                          & $\boldsymbol{\phi}$ Optimism & $\boldsymbol{\theta}$ Environmentalism & $\boldsymbol{\psi}$ Radical-Reform \\
+    \midrule
+    \textbf{Gender}                    &                              &                                        &                                     \\
+    \quad Male (reference)                   & $0.000$                      & $0.000$                                & $0.000$                             \\
+    \quad Female                       & $-0.148$                     & $-0.022$                               & $+0.037$                            \\
+    \addlinespace
+    \textbf{Age}                       &                              &                                        &                                     \\
+    \quad 18–24 (reference)                  & $0.000$                      & $0.000$                                & $0.000$                             \\
+    \quad 25–34                        & $+0.068$                     & $-0.003$                               & $+0.061$                            \\
+    \quad 35–44                        & $-0.004$                     & $-0.030$                               & $+0.113$                            \\
+    \quad 45–54                        & $-0.251$                     & $-0.181$                               & $+0.202$                            \\
+    \quad 55–64                        & $-0.314$                     & $-0.190$                               & $+0.216$                            \\
+    \quad 65+                          & $-0.377$                     & $-0.194$                               & $+0.261$                            \\
+    \addlinespace
+    \textbf{Education}                &                              &                                        &                                     \\
+    \quad No qualifications (reference)     & $0.000$                      & $0.000$                                & $0.000$                             \\
+    \quad Apprenticeship               & $-0.130$                     & $-0.110$                               & $+0.056$                            \\
+    \quad Other                        & $-0.100$                     & $-0.034$                               & $+0.008$                            \\
+    \quad Level 1                      & $-0.100$                     & $+0.053$                               & $-0.015$                            \\
+    \quad Level 2                      & $-0.102$                     & $-0.007$                               & $-0.017$                            \\
+    \quad Level 3                      & $-0.166$                     & $-0.049$                               & $+0.015$                            \\
+    \quad Level 4+                     & $+0.082$                     & $+0.057$                               & $-0.059$                            \\
+    \addlinespace
+    \textbf{Material insecurity (1 SD $\uparrow$)} & $+0.048$      & $+0.155$                               & $+0.006$                            \\
+    \bottomrule
+  \end{tabular}
+  \vspace{1ex}
+
+  \footnotesize
+  \textbf{Note:} Values are posterior mean coefficients; individual covariates are standardised or coded as 0/1 dummy variables, so their coefficients can be interpreted in roughly comparable units (the education and age effects are differences relative to a baseline category).
+\end{table}
+
+\subsection{Party intercepts}
+
+\begin{table}[ht]
+  \centering
+  \caption{Party intercepts on latent traits (posterior mean).}
+  \label{tab:party_intercepts}
+  \begin{tabular}{lccc}
+    \toprule
+    Party                          & $\boldsymbol{\phi}$ Optimism & $\boldsymbol{\theta}$ Environmentalism & $\boldsymbol{\psi}$ Radical-Reform \\
+    \midrule
+    Green                           & $-0.0921$                   & $+0.0917$                             & $+0.0271$                          \\
+    Labour                          & $+0.5084$                   & $+0.1413$                             & $-0.2632$                          \\
+    Plaid Cymru                     & $-0.1087$                   & $+0.0071$                             & $+0.0658$                          \\
+    SNP                              & $-0.1615$                   & $-0.0680$                             & $+0.0758$                          \\
+    Liberal Democrat                & $+0.2097$                   & $+0.1688$                             & $-0.1332$                          \\
+    Conservative                    & $+0.2556$                   & $+0.0302$                             & $-0.0097$                          \\
+    Reform UK                       & $-0.2328$                   & $-0.2211$                             & $+0.1303$                          \\
+    Another party                   & $-0.2789$                   & $-0.0435$                             & $+0.0735$                          \\
+    Don’t know                      & $+0.0749$                   & $+0.0301$                             & $+0.0104$                          \\
+    Won’t vote                      & $+0.0103$                   & $-0.0644$                             & $-0.0730$                          \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{region intercepts}
+
+\begin{table}[ht]
+  \centering
+  \caption{Region intercepts on latent traits (posterior mean).}
+  \label{tab:region_intercepts}
+  \begin{tabular}{lccc}
+    \toprule
+    Region                          & $\boldsymbol{\phi}$ Optimism & $\boldsymbol{\theta}$ Environmentalism & $\boldsymbol{\psi}$ Radical-Reform \\
+    \midrule
+    Yorkshire \& the Humber         & $-0.0527$                   & $+0.0016$                             & $-0.0026$                          \\
+    West Midlands                   & $-0.0334$                   & $-0.0057$                             & $-0.0025$                          \\
+    Scotland                        & $-0.0030$                   & $-0.0363$                             & $-0.0056$                          \\
+    Wales                           & $-0.0207$                   & $-0.0665$                             & $-0.0053$                          \\
+    North West                      & $+0.0055$                   & $+0.0128$                             & $+0.0039$                          \\
+    Eastern                         & $+0.0203$                   & $+0.0468$                             & $+0.0038$                          \\
+    South West                      & $-0.0392$                   & $-0.0021$                             & $+0.0006$                          \\
+    East Midlands                   & $+0.0358$                   & $-0.0050$                             & $+0.0052$                          \\
+    London                          & $+0.1117$                   & $+0.0760$                             & $+0.0014$                          \\
+    South East                      & $-0.0162$                   & $-0.0173$                             & $+0.0002$                          \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+
+\subsection{Communalities\_uniqueness}
+
+\begin{tabular}{llll}
+\toprule
+block & item & comm\_mean & uniq\_mean \\
+\midrule
+Environment & 1 & 0.7457503918044260 & 0.5122809360139830 \\
+Environment & 2 & 2.124180156064 & 0.14927536656507700 \\
+Environment & 3 & 0.09784672622878280 & 0.9104470770270630 \\
+Environment & 4 & 1.8176083097369800 & 0.20420996724142600 \\
+Environment & 5 & 1.6683159596341500 & 0.2340706434500950 \\
+Optimism & 1 & 1.260533962294710 & 0.15270304120196200 \\
+Optimism & 2 & 1.0593621387105000 & 0.2495808695576680 \\
+Optimism & 3 & 0.857179013159624 & 0.360060134444414 \\
+Optimism & 4 & 1.1278879307737300 & 0.21410203416755600 \\
+Optimism & 5 & 0.48264696680695900 & 0.59776981539588 \\
+Optimism & 6 & 1.1770953575877100 & 0.18957613242853100 \\
+Radical-Reform & 1 & 2.56964558512 & 0.20775064918778400 \\
+Radical-Reform & 2 & 1.2661889756190900 & 0.3998586719233190 \\
+Radical-Reform & 3 & 0.5525090153613150 & 0.6323448575062990 \\
+Radical-Reform & 4 & 3.114773805579130 & 0.1614668930265680 \\
+Radical-Reform & 5 & 2.21345951155015 & 0.2458342554345290 \\
+Radical-Reform & 6 & 3.457784921065630 & 0.13831754157714300 \\
+Radical-Reform & 7 & 0.0635752839984555 & 0.9412263282489910 \\
+Radical-Reform & 8 & 0.30403904575080800 & 0.7632268496029800 \\
+\bottomrule
+\end{tabular}
+
+\subsection{$R^2$ Summary}
+
+\begin{tabular}{ll}
+\toprule
+block & mean\_R2 \\
+\midrule
+R2\_env & 0.39067011125 \\
+R2\_opt & 0.613330542 \\
+R2\_rad & 0.22076207625 \\
+\bottomrule
+\end{tabular}
+
+\subsection{Reliabilities}
+
+\begin{tabular}{ll}
+\toprule
+block & mean\_omega \\
+\midrule
+omega\_env & 0.8979101883020290 \\
+omega\_opt & 0.9364559247129030 \\
+omega\_rad & 0.9324758784902900 \\
+\bottomrule
+\end{tabular}
+
+\subsection{Residual Correlations}
+
+\begin{tabular}{ll}
+\toprule
+pair & correlation \\
+\midrule
+$\phi$--$\theta$ & 0.374990569 \\
+$\phi$--$\psi$ & -0.47703866 \\
+$\theta$--$\psi$ & -0.2776827001386080 \\
+\bottomrule
+\end{tabular}
+
+\end{document}

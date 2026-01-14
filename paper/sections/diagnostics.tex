@@ -1,0 +1,242 @@
+ \documentclass[a4paper,11pt]{article}
+\usepackage[top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{multirow,booktabs,graphicx,enumerate,float,fancyhdr,amsmath,amssymb,tcolorbox,xcolor,array,makecell}
+\setlength{\parindent}{0in}
+\setlength{\parskip}{1em}
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\footnotesize Bayesian Modelling - Research Note}
+\rhead{\footnotesize Henry Baker}
+\cfoot{\footnotesize \thepage}
+\newtcolorbox{redbox}{colback=red!10!white,colframe=red!80!black,fonttitle=\bfseries,title=NB!,sharp corners}
+\begin{document}
+
+\thispagestyle{empty}
+\begin{tabular}{p{15.5cm}}
+{\large \bf Bayesian Modelling\\
+\hline}
+\end{tabular}
+
+\begin{center}
+{\Large \bf Research Note}\\
+2 - Diagnostics\\
+Henry Baker (228755)\\
+\end{center}
+
+% ---------------------------------------------------------------------------------------
+% Appendix: Quality Checks, Diagnostic Procedures, and Quantities of Interest
+% ---------------------------------------------------------------------------------------
+
+\section{Quality Checks and Diagnostic Procedures}
+
+\subsection{1. Monitoring Progress During Inference}
+Before completing a full fit, inspect whether the model compiles and whether early MCMC iterations run without numerical errors (e.g.\ NaNs, $\Sigma_{\alpha}$ or $\Sigma_{\delta}$ not positive‐definite).  
+\begin{itemize}
+  \item \textbf{“Fit fast, fail fast” approach:}  
+    \begin{itemize}
+      \item Begin with a minimal subset of data (e.g., 100–200 respondents) and a pared‐down set of covariates (1–2 predictors).  
+      \item Run the Stan program with a small number of warmup draws (e.g.\ 500) and check for immediate compilation/runtime errors.  
+      \item If the minimal model fails, diagnose and reparameterize (e.g.\ switch to non‐centered parameterizations in hierarchical blocks, standardize covariates).  
+    \end{itemize}
+
+  \item \textbf{Traceplate monitoring in CmdStanR:}  
+    \begin{itemize}
+      \item Stream Stan’s printed diagnostics (divergences, tree‐depth warnings, high $\widehat{R}$) during warmup.  
+      \item If $\widehat{R}$ remains large or many divergences appear in the first few hundred warmup iterations, address model geometry before proceeding.  
+    \end{itemize}
+
+  \item \textbf{Incremental model building:}  
+    \begin{enumerate}
+      \item Fit measurement submodels for “Economic Optimism” only (six items) with no covariates, verifying that $\{\beta^{(\mathrm{opt})}_j, \lambda^{(\mathrm{opt})}_j, \sigma^{(\mathrm{opt})}_j\}$ sample cleanly.  
+      \item Add the latent‐regression part \(\eta_i = \alpha_{r[i]} + \delta_{q[i]} + B\,X_i + \varepsilon_i\), first with one group‐level intercept (e.g.\ \(\alpha_{r}\) only).  
+      \item Finally, introduce the full two‐dimensional structure (\(\phi, \theta\)) and the environment measurement submodel.  
+    \end{enumerate}
+\end{itemize}
+(See Gomel \emph{et al.} (2024) for practical recommendations on streaming Stan diagnostics :contentReference[oaicite:0]{index=0}.)
+
+\subsection{2. Convergence Diagnostics}
+Once the model compiles and runs without fatal errors, conduct post‐warmup checks:
+\begin{itemize}
+  \item \(\mathbf{\widehat{R}}\) (potential scale reduction factor)
+    \begin{itemize}
+      \item Compute \(\widehat{R}\) for all parameters (hyperparameters, loadings, slopes, latent draws).  
+      \item Target: \(\widehat{R} < 1.01\).  If \(\widehat{R} \ge 1.01\), consider further reparameterization or increasing warmup/adaptation.  
+      \item Use the rank‐normalised, folded version of \(\widehat{R}\) (via the \texttt{posterior} package in R) for sensitivity in the tails.  
+    \end{itemize}
+
+  \item \(\mathbf{\mathrm{ESS}}\) (effective sample size)  
+    \begin{itemize}
+      \item Compute both \(\mathrm{ESS}_{\mathrm{bulk}}\) and \(\mathrm{ESS}_{\mathrm{tail}}\) for every monitored parameter.  
+      \item Rule‐of‐thumb: \(\mathrm{ESS}_{\mathrm{bulk}} > 200\) and \(\mathrm{ESS}_{\mathrm{tail}} > 100\) per chain.  
+      \item If \(\mathrm{ESS}\) is too low for some parameters (especially hyperparameters or latent‐regression slopes), consider (i) running more iterations, (ii) adding stronger shrinkage priors, or (iii) reparameterizing.  
+    \end{itemize}
+
+  \item \textbf{Trace plots}  
+    \begin{itemize}
+      \item Visually inspect trace plots for key parameters:
+        \[
+          \bigl\{\sigma_{\alpha,1},\,\sigma_{\alpha,2},\,\sigma_{\delta,1},\,\sigma_{\delta,2},\,\rho_{\phi\theta},\,\beta_{p\in\{\text{gender,age,edu,insec}\}}\bigr\}.
+        \]
+      \item A well‐mixed chain should (a) rapidly traverse the high‐density region, (b) show no systematic drift or “sticky” segments, and (c) overlap tightly across chains.  
+    \end{itemize}
+
+  \item \textbf{Divergent transitions}  
+    \begin{itemize}
+      \item During sampling, Stan reports each divergence (when Hamiltonian proposals land outside the high‐density region).  
+      \item Aim for zero divergences after warmup:  
+        \[
+          \text{num\_divergent} \approx 0 \quad (\text{out of }4\times1{,}000\text{ post‐warmup draws}).
+        \]
+      \item If divergences persist:
+        \begin{enumerate}
+          \item Increase \(\texttt{adapt\_delta}\) (e.g.\ 0.95 or 0.99).  
+          \item Switch to a non‐centered parameterization for hierarchical blocks (especially when group‐SD is small).  
+          \item Standardize all continuous predictors (gender, insecurity, etc.) to improve posterior geometry.  
+        \end{enumerate}
+    \end{itemize}
+
+  \item \textbf{Maximum tree depth hits}  
+    \begin{itemize}
+      \item If Stan prints `Max treedepth exceeded`, consider increasing \texttt{max\_treedepth} (e.g.\ from 10 to 12) or reparameterizing the model to reduce curvature.  
+    \end{itemize}
+
+  \item \textbf{Bayesian Fraction of Missing Information (BFMI)}  
+    \begin{itemize}
+      \item Monitor BFMI; values \(\lesssim 0.2\) indicate that the momentum distribution is poorly tuned to the posterior’s geometry.  
+      \item If BFMI is low, try re‐scaling priors or employing more informative priors on covariance hyperparameters.  
+    \end{itemize}
+\end{itemize}
+(For details on interpreting \(\widehat{R}\), \(\mathrm{ESS}\), divergences, and BFMI in Stan, see the diagnostics section of Stan’s manual :contentReference[oaicite:1]{index=1}.)
+
+\subsection{3. Prior Predictive Checks}
+Prior predictive checks should be run \emph{before} fitting the model to the observed data.  Their purpose is to ensure that the chosen priors generate plausible data \emph{a priori}. Implementation steps:
+\begin{enumerate}
+  \item In the Stan program, add a \texttt{generated quantities} block that simulates\/$y^{\mathrm{prior}}$ from the likelihood using parameters drawn from their priors.  E.g.:
+  \[
+    \text{generated quantities: }\quad
+    \tilde{y}_{i} \;=\; 
+      \text{Normal}\bigl(\beta_j + \lambda_j \cdot \phi_i,\;\sigma_j\bigr)\quad
+      (i=1,\dots,N_{\mathrm{opt}})
+  \]
+  \item In R, compile and sample from the model \emph{without} passing in the real data vector \(\{y_{ij}\}\).  Instead, let Stan draw $\{\beta,\lambda,\sigma\}$ from their priors, then simulate $\tilde{y}$.  
+  \item Visualize the distribution of $\tilde{y}$ for each item.  For instance:
+  \[
+    \text{histogram}\bigl(\tilde{y}^{(\mathrm{opt})}_j \bigr), \quad
+    \text{histogram}\bigl(\tilde{y}^{(\mathrm{env})}_k \bigr).
+  \]
+  Check that simulated \(\tilde{y}\) fall in a realistic range (e.g.\ \(\pm3\) for standardized responses).  
+  \item If $\tilde{y}$ is too extreme (e.g.\ $\pm15$), tighten priors (e.g.\ change $\lambda_j\sim\mathrm{LogNormal}(0,1)$ to $\mathrm{LogNormal}(0,0.5)$ or replace $\sigma_j\sim t_3(0,1)$ with $\mathrm{Normal}(0,1)$ truncated at zero).  
+  \item Only once the prior predictive distributions align with substantive domain knowledge should you proceed to fit the model to observed data.  
+\end{enumerate}
+(See Hoffman and Gelman (2024) for guidance on prior predictive checking in Bayesian models :contentReference[oaicite:2]{index=2}.)
+
+\subsection{4. Posterior Predictive Checks (PPC)}
+After fitting, evaluate how well the posterior‐learned model reproduces the observed data.
+\begin{enumerate}
+  \item \textbf{Generate replicated data $\tilde{y}$ in Stan’s \texttt{generated quantities} block:}
+    \[
+      \text{for } n = 1:N_{\mathrm{opt}}\colon\quad
+        \tilde{y}^{(\mathrm{opt})}_n \;=\;\mathrm{normal\_rng}\Bigl(\beta^{(\mathrm{opt})}_{j(n)} + \lambda^{(\mathrm{opt})}_{j(n)}\,\phi_{i(n)},\,\sigma^{(\mathrm{opt})}_{j(n)}\Bigr),
+    \]
+    \[
+      \text{for } n = 1:N_{\mathrm{env}}\colon\quad
+        \tilde{y}^{(\mathrm{env})}_n \;=\;\mathrm{normal\_rng}\Bigl(\beta^{(\mathrm{env})}_{j(n)} + \lambda^{(\mathrm{env})}_{j(n)}\,\theta_{i(n)},\,\sigma^{(\mathrm{env})}_{j(n)}\Bigr).
+    \]
+  \item \textbf{Extract $\{\tilde{y}\}$ from CmdStanR posterior CSVs.}  
+    \begin{itemize}
+      \item Use \texttt{import\_CmdStanPosterior(fields = "y\_sim")} to load all $\tilde{y}$ draws.  
+      \item Reshape into a matrix of dimension $N \times S$ (for $S$ posterior draws).  
+    \end{itemize}
+  \item \textbf{Compare observed vs.\ simulated summaries:}
+    \begin{itemize}
+      \item For each item $j$, compute observed distribution $\{y_{ij}\}$ and simulated distribution $\{\tilde{y}^{(s)}_{ij}\}$.  Plot side‐by‐side histograms or density overlays.  
+      \item Compute item‐level means and variances:
+        \[
+          \bar{y}_j,\;\mathrm{Var}(y_j),
+          \quad
+          \overline{\tilde{y}}^{(s)}_j,\;\mathrm{Var}\bigl(\tilde{y}^{(s)}_j\bigr) \quad (s=1,\dots,S).
+        \]
+        Compare $\bar{y}_j$ vs.\ distribution of $\overline{\tilde{y}}^{(s)}_j$.  
+      \item Check latent residuals: e.g.\ for optimism,
+        \[
+          e^{(\mathrm{opt})}_{ij} \;=\; y_{ij} - \bigl(\beta^{(\mathrm{opt})}_j + \lambda^{(\mathrm{opt})}_j\,\phi_i \bigr),
+        \]
+        then examine whether $\{e^{(\mathrm{opt})}_{ij}\}$ are approximately zero‐mean and uncorrelated across $j$.  
+    \end{itemize}
+  \item \textbf{Group‐level PPC:}  
+    \begin{itemize}
+      \item For each region $r$, define 
+        \[
+          \{\phi_i: i \colon r[i] = r\},\quad \{\theta_i: i \colon r[i] = r\}.
+        \]
+      \item Simulate region‐level summaries (e.g.\ $\bar{\phi}_r$, $\bar{\theta}_r$) under the posterior and compare to the empirical means (e.g.\ cluster‐averaged raw item scores).  
+      \item Analogously for party $q$.  
+    \end{itemize}
+  \item \textbf{Interpretation:}  
+    \begin{itemize}
+      \item If observed item distributions lie in the tails of $\tilde{y}$ distributions, the measurement model may be mis‐specified (e.g.\ wrong number of latent factors, poor item loadings).  
+      \item If latent residuals show systematic structure (e.g.\ residual correlation between optimism items after conditioning on $\phi$), consider adding a second factor or correlated error terms.  
+    \end{itemize}
+\end{enumerate}
+(See the “Posterior Predictive Checking (PPC)” section in \cite{Gobel2024} for examples and visualization strategies :contentReference[oaicite:3]{index=3}.)
+
+\subsection{5. Diagnosing Covariance and Hierarchical Parameter Issues}
+Stan’s hierarchical blocks for region ($\alpha_{r}$) and party ($\delta_{q}$) intercepts rely on valid covariance matrices.  Common checks:
+\begin{itemize}
+  \item \(\boldsymbol{\Sigma_{\alpha}} = D_{\alpha} L_{\alpha} L_{\alpha}^\top D_{\alpha}\) and \(\boldsymbol{\Sigma_{\delta}} = D_{\delta} L_{\delta} L_{\delta}^\top D_{\delta}\) must be positive‐definite (PD).  
+  \item During warmup, if Stan complains “\(\Sigma_{\alpha}\) is not positive‐definite” or “not symmetric,” then:
+    \begin{enumerate}
+      \item Verify that each region (resp.\ party) has at least two respondents.  If any category has $n \le 1$, merge it with a neighboring category.  
+      \item Tighten the prior on $\sigma_{\alpha,\ell}$ or $\sigma_{\delta,\ell}$ (e.g.\ use $\text{Normal}(0,1)$ truncated at 0 instead of Cauchy(0,2.5)).  
+      \item Increase the LKJ prior concentration: change 
+        \[
+          L_{\alpha}\sim \mathrm{LKJ}(2)\;\longrightarrow\;L_{\alpha}\sim \mathrm{LKJ}(10),
+        \]
+        which shrinks $\rho_{\alpha}$ nearer zero.  
+    \end{enumerate}
+  \item After sampling, extract posterior draws of $\rho_{\alpha}$ and $\rho_{\delta}$:
+    \[
+      \rho_{\alpha} = \frac{\Sigma_{\alpha}^{12}}{\sqrt{\Sigma_{\alpha}^{11}\,\Sigma_{\alpha}^{22}}}, 
+      \quad
+      \rho_{\delta} = \frac{\Sigma_{\delta}^{12}}{\sqrt{\Sigma_{\delta}^{11}\,\Sigma_{\delta}^{22}}}.
+    \]
+    Check that credible intervals do not lie outside \([-1,1]\).  
+  \item Check posterior histograms of $\sigma_{\alpha,1}$, $\sigma_{\alpha,2}$, $\sigma_{\delta,1}$, $\sigma_{\delta,2}$.  If any posterior mode is at or near zero, that dimension has little group variation—consider removing that block.  
+\end{itemize}
+
+\subsection{6. Identifiability and Multicollinearity Checks}
+\begin{itemize}
+  \item \textbf{Frequency counts of covariate categories:}  
+    \begin{itemize}
+      \item For each age bracket $k=1,\dots,6$, let 
+        \[
+          n_{\mathrm{age}, k} = \sum_{i=1}^{N} \mathbf{1}\{\text{age_code}_i = k\}.
+        \]
+        If $n_{\mathrm{age},k} < 30$, the corresponding dummy coefficient $\beta_{\mathrm{age},k}$ will be poorly identified.  Merge adjacent brackets or use a monotonic effect.  
+      \item Similarly, for each education level $\ell=1,\dots,7$, check 
+        \[
+          n_{\mathrm{edu},\ell} = \sum_{i=1}^{N} \mathbf{1}\{\text{edu_code}_i = \ell\}. 
+        \]
+        Merge levels with $n_{\mathrm{edu},\ell} < 30$.  
+      \item For gender, ensure $n_{\mathrm{male}}$ and $n_{\mathrm{female}}$ are both $\ge 100$.  
+      \item For party categories, verify each of the 10 parties has $n_q \ge 2$.  If any party has $n_q \le 1$, collapse to “Another party.”  
+    \end{itemize}
+
+  \item \textbf{Posterior correlations of slope parameters:}  
+    \begin{itemize}
+      \item Extract posterior draws $\{\beta^{(\phi)}_{p}\}$ and $\{\beta^{(\phi)}_{p'}\}$, compute their sample correlation for each pair $(p,p')$.  If $|\mathrm{Corr}(\beta^{(\phi)}_{p},\beta^{(\phi)}_{p'})|\approx 1$, collinearity is extreme—consider dropping or combining covariates.  Repeat for $\{\beta^{(\theta)}_{\cdot}\}$.  
+      \item Similarly, check correlation between $\sigma_{\alpha,\ell}$ and $\sigma_{\delta,\ell}$ for each dimension $\ell=1,2$ to see if region‐ and party‐variances are confounded.  
+    \end{itemize}
+\end{itemize}
+
+\subsection{7. Missingness, Imputation, and Drop‐out}
+\begin{itemize}
+  \item If any $y_{\mathrm{opt}}$ or $y_{\mathrm{env}}$ is missing at random (within an individual), Stan’s \texttt{NA} filtering in the long‐data pipeline already omits those rows.  
+  \item For covariate NAs (e.g.\ a missing age bracket), we dropped those respondents in \texttt{cov\_df} (see Section 4 of the main script).  Alternatively, consider multiple imputation before fitting the model.  
+\end{itemize}
+
+
+
+\end{document}

@@ -1,0 +1,765 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[table]{xcolor}
+\usepackage{tcolorbox}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{float}  
+\graphicspath{{figures/qoi/}{figures/diagnostic/}{figures/}}
+\usepackage{amsmath, amssymb, graphicx, booktabs, geometry, setspace, url}
+\usepackage[style=apa, backend=biber, natbib=true]{biblatex}
+\addbibresource{references.bib}
+\geometry{margin=1in}
+\setstretch{1.5}
+
+\title{Mapping Multidimensional Climate Attitudes in Britain: A Bayesian Hierarchical Latent Trait Approach}
+\author{Henry Baker}
+\date{\today}
+
+\begin{document}
+
+\pagenumbering{gobble}
+
+\maketitle
+
+\begin{abstract}
+This research note introduces a Bayesian hierarchical latent trait model to analyse multidimensional public attitudes toward climate policy in Britain. Using a nationally representative survey of 3,000 respondents collected in 2025, we estimate three latent dimensions: (1) \textit{Environmentalism}, reflecting prioritisation of environmental protection over economic growth; (2) \textit{Economic Optimism}, capturing individuals' confidence in economic prospects; and (3) \textit{Support for Radical Reform}, indicating preferences for abrupt systemic governance and policy changes over maintaining the status quo. Our hierarchical approach integrates individual demographic characteristics and variation across political parties and regions. Preliminary results highlight some notable demographic effect patterns — particularly around material insecurity and age (plus a lack of educational effects), alongside significant party-level differences. Additionally, we observe a residual correlation between environmentalism and economic optimism, which holds implications for targeted climate communication strategies emphasising optimistic narratives. Methodologically, we illustrate how hierarchical Bayesian latent trait modelling provides a coherent framework for quantifying complex opinion structures and assessing their predictors. Further model refinement, sensitivity checks, and downstream population-averaged predictive-analysis are needed to evaluate the robustness of the initial findings herein, and to support practical model application and audience segmentation.
+\end{abstract}
+
+\begin{center}
+\textbf{GitHub repo}: \url{https://github.com/henrybaker/climate-attitudes-uk_bayesian-hierarchical-modelling}    
+\end{center}
+
+\newpage
+
+\tableofcontents
+
+\newpage
+
+\pagenumbering{arabic}
+
+\section{Introduction}
+
+British public opinion on climate change is shaped by partisan identity, economic circumstances, and demographic factors, although political divides have historically been less pronounced in the UK compared to countries like the United States (Carter, 2014; Whitmarsh, 2011). However, recent research indicates growing ideological cleavages, driven not only by diverging beliefs about climate science but also by "solution aversion," a tendency to downplay problems when disliked policy solutions, such as regulations or taxes, are proposed (Campbell \& Kay, 2014). These dynamics highlight the inherently multi-dimensional nature of environmental attitudes.
+
+Accurate measurement of these complex latent attitudes is crucial for understanding opinion polarisation and designing effective climate policy and communication strategies. Noisy single-item survey measures inadequately capture the nuanced nature of environmental orientations, and scholars have long advocated multi-item scales, such as the New Ecological Paradigm (NEP), to reliably measure underlying environmental worldviews (Dunlap et al., 2000). Latent trait models like the one introduced in this paper leverage responses across multiple survey items to infer underlying attitudes, thereby reducing measurement error inherent in individual survey questions and enhancing construct validity (Treier \& Jackman, 2008).
+
+Moreover, hierarchical (structural equations) modelling approaches (SEM) facilitate simultaneous estimation of individual-level and group-level influences on attitudes, such as political party affiliation or regional variation, thereby providing nuanced insights into the demographic and contextual determinants of climate attitudes (Gelman \& Hill, 2007; Fox, 2010). Techniques such as multilevel regression and post-stratification (MRP) have in the past effectively mapped regional variations in climate attitudes, demonstrating their utility in public opinion research (Howe et al., 2015).
+
+In this research note, we advance this literature by developing and applying a Bayesian hierarchical latent trait model to measure three interconnected attitudinal dimensions in the UK context: (1) \textit{Environmentalism}, reflecting prioritisation of environmental concerns over economic interests; (2) \textit{Economic Optimism}, capturing an individual's outlook on economic and societal prospects; and (3) \textit{Support for Radical Reform}, indicating preferences for significant political and economic system changes versus maintaining the status quo. Our analysis utilises a nationally representative survey dataset ($n \approx 3000$), enabling us to estimate latent trait scores and systematically examine their associations with demographic characteristics (age, gender, education, material insecurity) and contextual factors (party affiliation and region).
+
+We draw upon diverse scholarly perspectives, including political behaviour research emphasising polarisation and consensus dynamics in climate opinions (Ansolabehere, Rodden, \& Snyder, 2008; Carter, 2014), latent attitude measurement literature underscoring multi-indicator approaches (Dunlap et al., 2000; Treier \& Jackman, 2008), and hierarchical modelling scholarship highlighting the importance of group-level context in shaping individual attitudes (Gelman \& Hill, 2007). Integrating these methodological elements allows us to robustly assess the distribution and determinants of environmental attitudes across the UK population.
+
+The remainder of this note proceeds as follows: we outline the survey data and covariates used, formally specify the Bayesian latent trait model and estimation procedures, present model diagnostics and substantive findings, and discuss implications for climate communication and policymaking. 
+
+\begin{tcolorbox}
+    \textbf{Note:} Throughout we do not report 95\% credible intervals alongside our posterior point estimates, rather we present full posterior distributions in associated plots. This approach reflects a core strength of Bayesian modelling: the coherent propagation of uncertainty throughout the model. Rather than emphasising arbitrary thresholds for statistical significance (e.g.\ $p < 0.05$), our visualisation of the entire posterior density aims to convey a more intuitive and informative picture of uncertainty around each parameter estimate.
+\end{tcolorbox}
+
+\section{Data \& Measures}
+We analyse data from a nationally representative UK survey conducted in 2025, drawn using stratified random sampling to match national demographics. The questionnaire covered a range of political and social attitudes; here we focus on a battery of items related to environmental priorities, economic optimism/pessimism, and support for radical versus incremental policy changes. We selected these items to construct three latent outcome variables, and also assembled a (limited and preliminary) set of individual-level covariates from the survey’s demographic and political questions.
+
+\subsection{Outcome Constructs (Latent Traits)}
+From the survey items, we identified three clusters of questions corresponding to:
+\begin{itemize}
+  \item \textbf{Environmentalism (prioritised over growth) ($\theta$):} Five questions probed attitudes toward environmental protection, climate change and economic growth. One was a binary forced-choice question (a trade-off item); the other four were Likert statements (5-point agreement scales) (e.g.\ “The government should prioritise climate change even if it means higher taxes”, “Protecting the environment is more important than protecting jobs”, etc.). We coded the forced-choice item as 1 for the pro-environmental choice and 0 for the alternative, then standardised it similarly to the Likert items (which we coded from strongly disagree = 1 to strongly agree = 5, reversing the single cost-first priority statement to numerically align with the others, then standardised). Despite the ordinal nature of responses, for convenience we treat each as a continuous indicator of the latent environmentalism factor,
+  though a cumulative probit/logit model would be more appropriate given the ordinal nature of these items (see Appendix~\nameref{app:extensions}). In this context, “environmentalism” (higher latent $\theta$) reflects the degree to which a person prioritises environmental protection over unconstrained economic growth. 
+  
+  \item \textbf{Economic Optimism ($\phi$):} Six Likert-scale questions asked respondents how optimistic or pessimistic they feel about various aspects of the economic future (e.g.\ “To what extent do you feel optimistic or pessimistic about [the economy/your future/etc]?”). Response options ranged from Very Pessimistic to Very Optimistic on a 5-point scale. As before, for convenience we numerically recoded these 1–5 Likert responses and standardised each item to mean 0 and unit variance - although later extensions should again consider using cumulative link models. Higher latent $\phi$ values indicate greater economic optimism. 
+  
+  \item \textbf{Support for Radical Reform ($\psi$):} Eight items were designed to gauge respondents’ preference for radical change versus the status quo in governance and policy. These were presented as forced-choice questions (paired statements). For example, one item asked respondents to choose between “Westminster has moved too slowly on climate action; we need drastic measures now” (radical orientation) versus “Westminster has moved at a good pace; no need for drastic change” (status-quo orientation). Another pair contrasted “I support leaders who are prepared to take radical action to address climate change” versus “I prefer leaders who keep the system broadly the same”. We coded each item as 1 if the respondent chose the radical/pro-reform statement and 0 if they chose the status quo statement. Because these items are dichotomous, we treated them (after a 0–1 coding) as approximately continuous by applying a z-score standardization to each. This yields eight standardised indicators (with mean zero, standard deviation one). Higher values on $\psi$ indicate a greater inclination toward radical systemic reforms and impatience with incremental change.
+\end{itemize}
+
+All items were coded so that higher values indicate more of the latent trait, which simplifies interpretation and allows us to constrain factor‐loading signs for identifiability.  We then assessed unidimensionality by computing the posterior mean communality (\(\mathrm{comm}_j\)) and uniqueness (\(\mathrm{uniq}_j\)) for each item (Table~\ref{tab:comm_uniq}), where
+\[
+\mathrm{comm}_j + \mathrm{uniq}_j = \mathrm{Var}(Y_j)
+\]
+  
+\begin{table}[ht]
+  \centering
+  \begin{tabular}{llrr}
+    \toprule
+    Block            & Item & $\mathrm{Communality}$ & $\mathrm{Uniqueness}$ \\
+    \midrule
+    Environment      & 1    & $0.75$  & $0.51$ \\
+    Environment      & 2    & $2.1$   & $0.15$ \\
+    Environment      & 3    & $0.098$ & $0.91$ \\
+    Environment      & 4    & $1.8$   & $0.20$ \\
+    Environment      & 5    & $1.7$   & $0.23$ \\
+    Optimism         & 1    & $1.3$   & $0.15$ \\
+    Optimism         & 2    & $1.1$   & $0.25$ \\
+    Optimism         & 3    & $0.86$  & $0.36$ \\
+    Optimism         & 4    & $1.1$   & $0.21$ \\
+    Optimism         & 5    & $0.48$  & $0.60$ \\
+    Optimism         & 6    & $1.2$   & $0.19$ \\
+    Radical-Reform   & 1    & $2.6$   & $0.21$ \\
+    Radical-Reform   & 2    & $1.3$   & $0.40$ \\
+    Radical-Reform   & 3    & $0.55$  & $0.63$ \\
+    Radical-Reform   & 4    & $3.1$   & $0.16$ \\
+    Radical-Reform   & 5    & $2.2$   & $0.25$ \\
+    Radical-Reform   & 6    & $3.5$   & $0.14$ \\
+    Radical-Reform   & 7    & $0.064$ & $0.94$ \\
+    Radical-Reform   & 8    & $0.30$  & $0.76$ \\
+    \bottomrule
+  \end{tabular}
+    \caption{Communalities and uniquenesses by block and item (posterior means)}
+    \label{tab:comm_uniq}
+\end{table}
+
+Averaging over items within each block, it is clear that the percentage of variance explained for each block is comfortably over 60\%, suggesting the unidimensional factor structure provides an adequate summary of the item responses within each construct. This supports the use of single-factor measurement models in all three scales in the latent trait framework.
+
+\begin{table}[ht]
+  \centering
+  \begin{tabular}{lccc}
+    \toprule
+    Block             & Mean Communality & Mean Uniqueness & \% Variance Explained \\
+    \midrule
+    Environment       & 1.29             & 0.40             & 76\% \\
+    Optimism          & 0.99             & 0.29             & 77\% \\
+    Radical‐Reform    & 1.69             & 0.44             & 79\% \\
+    \bottomrule
+  \end{tabular}
+\caption{Average communality, uniqueness, and explained variance by item block}
+  \label{tab:comm_uniq_summary}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{item_discrimination_lambda_distirbutions.png}
+    \caption{Item discriminations by trait; there's variation in informativeness and some of the lower $\lambda$ values suggest possible redundancy / candidates for revision or removal}
+    \label{fig:enter-label}
+\end{figure}
+
+\subsection{Individual-Level Covariates}
+Based on prior research on climate attitudes and political behaviour, we include a set of covariates to explain variation in the latent traits across individuals - mostly coded as dummy variables to allows non-linear effects.
+\begin{itemize}
+  \item \textbf{Gender:} binary indicator (Female = 1, Male = 0). 
+  
+  \item \textbf{Age:} created dummy variables for five age brackets: 25–34, 35–44, 45–54, 55–64, and 65+ (with 18–24 as the reference category). 
+  
+  \item \textbf{Education:} recoded into dummy variables for six categories: \emph{Level 4+} (university degree or higher), to \emph{Level 1} (4 GCSE passes), \emph{Apprenticeship}, and \emph{Other qualifications}. The omitted reference category is \emph{No qualifications}. 
+  \item \textbf{Material Insecurity (self-reported perception of):} we constructed an index from a series of eight questions that asked how frequently the respondent experienced certain financial stresses (e.g.\ “I worry about paying my bills”, “I run out of money for basic necessities”). Response options were Never, Occasionally, Fairly often, Very often, coded 0–3. We averaged the eight items to form a composite and standardised to zero mean, unit standard-deviation. Higher $M_i$ captures higher anxiety over economic vulnerability.
+
+    \item \textbf{Further additions}: the above represent the preliminary covariates included in the model, but many more could/should be included as extensions. Self-reported income for example would be another obvious choice - however, because this variable was highly incomplete, to avoid extensive drop-out of observations, we left it out for this modelling attempt.
+\end{itemize}
+
+In our hierarchical specification, we treat \emph{party affiliation} and \emph{region} as grouping factors with random intercepts rather than as sets of dummy regressors. 
+
+\begin{itemize}
+  \item \textbf{Party Affiliation:} Respondents reported their political party preference (either their vote in the last general election or the party they would vote for if an election were held tomorrow). We combined these into a single party identification variable for each respondent. Modelling party differences through party-level random intercepts in the hierarchical model treats affiliation as a grouping factor that can shift the overall level of each latent trait. Party intercepts thus captures unobserved factors (e.g.\ partisan messaging, selective self-selection into parties by values) that systematically differentiate supporters of various parties on $\phi$, $\theta$, and $\psi$.
+  
+  \item \textbf{Region:} We include a similar grouping for region. We use 10 region categories. Similarly, rather than treating region as a fixed effect, we also include \emph{region-level random intercepts} for each latent dimension. This recognises possible geographical clustering of attitudes, and partials out region-specific shifts, while pooling information - especially helpful for regions with fewer respondents.
+\end{itemize}
+
+Treating these variables as random hierarchical intercepts bring two primary advantages given the dataset:
+\begin{enumerate}
+  \item \textbf{Exchangeability and partial pooling.}  With a large number of parties and ten geographic regions - some with relatively few respondents - estimating each category as a fixed effect risks overfitting and unstable estimates.  By modelling party and region intercepts as draws from common Gaussian distributions, we shrink extreme estimates toward the overall mean, borrow strength across groups, and obtain more reliable estimates for small-$N$ categories.  
+  \item \textbf{Substantive interest in variance components.}  We are later interested in quantifying how much of the total variance in each latent trait is attributable to between-party and between-region heterogeneity, rather than in every individual pairwise contrast. Random intercepts naturally decompose trait variation into within- and between-group components, facilitating inference on contextual clustering (e.g.\ the effects of partisan messaging or regional political cultures) without exploding the parameter count.
+\end{enumerate}
+
+Tables \ref{tab:party_intercepts}–\ref{tab:region_intercepts} present the posterior means of the party and region random intercepts, respectively, and Table \ref{tab:covariate_effects} summarises the individual-level demographic fixed-effect estimates.
+
+\section{Hierarchical Bayesian Latent Trait Model Specification}
+
+The model consists of two parts: three measurement models that link the observed survey responses to the latent traits, and a structural model that specifies how the latent traits vary by individual covariates and group-level effects. The entire model is estimated jointly in a Bayesian framework, allowing us to propagate uncertainty from the measurement part into our estimates of substantive effects.
+
+\subsection{Measurement Model (Item Response Component)}
+For each latent trait ($\phi,\theta,\psi$), we assume a linear \emph{item response model} where the observed survey responses are driven by the underlying latent attitude plus item-specific parameters. Given the continuous/standardised nature of our recoded item responses, we use a Gaussian factor analytic formulation, treating the Likert and binary items as continuous approximately normal indicators after standardisation (see Section~\ref{sec:limitations} and Appendix~\ref{app:extensions} for a more detailed justification and critique of these assumptions). Specifically, let $\phi_i$, $\theta_i$, $\psi_i$ denote individual $i$’s latent scores for optimism, environmentalism, and radicalism, respectively. The combined measurement model can be written as:
+
+\begin{align*}
+(\text{Optimism: }\phi)\quad &Y^{(\phi)}_{i j}
+  = \alpha^{(\phi)}_j + \lambda^{(\phi)}_j\,\phi_i + \varepsilon^{(\phi)}_{i j}, 
+  &&\varepsilon^{(\phi)}_{i j}\sim\mathcal{N}\bigl(0,\;\sigma^{2\,(\phi)}_j\bigr),
+  &j=1,\dots,6,\\
+(\text{Environmentalism: }\theta)\quad &Y^{(\theta)}_{i k}
+  = \alpha^{(\theta)}_k + \lambda^{(\theta)}_k\,\theta_i + \varepsilon^{(\theta)}_{i k}, 
+  &&\varepsilon^{(\theta)}_{i k}\sim\mathcal{N}\bigl(0,\;\sigma^{2\,(\theta)}_k\bigr),
+  &k=1,\dots,5,\\
+(\text{Radicalism: }\psi)\quad &Y^{(\psi)}_{i \ell}
+  = \alpha^{(\psi)}_\ell + \lambda^{(\psi)}_\ell\,\psi_i + \varepsilon^{(\psi)}_{i \ell}, 
+  &&\varepsilon^{(\psi)}_{i \ell}\sim\mathcal{N}\bigl(0,\;\sigma^{2\,(\psi)}_\ell\bigr),
+  &\ell=1,\dots,8.
+\end{align*}
+
+Here, $Y^{(\text{opt})}_{i j}$, $Y^{(\text{env})}_{i k}$, and $Y^{(\text{rad})}_{i \ell}$ are respondent $i$’s observed response to item $j$, $k$, or $\ell$; $\alpha$ are \emph{item intercepts} (i.e. difficulties in IRT lingo), and $\lambda$ are \emph{factor loadings}. For identifiability, we restrict each $\lambda \geq 0$,  without which the latent factors would be unanchored in sign. We also impose a scale constraint by fixing unit variance for each latent trait by constraining the latent covariance matrix $\Omega$ to be a correlation matrix (i.e. diagonal elements = 1). Posterior diagnostics confirm that the MCMC algorithm did not suffer from sign-switching or scale drifting (see Figure~\ref{fig:trace} and Appendix~\ref{app:diagnostics}).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{traceplots_selected_params.png}
+    \label{fig:trace}
+    \caption{Trace plots for selected parameters (\(\sigma_{\delta,1}\), \(\rho_{\phi,\theta}\), and a representative \(\beta\)). Chains mix well and show no divergences.}
+\end{figure}
+
+\subsection{Structural Model (Hierarchical Regression)}
+Let $\boldsymbol{\eta}_i = (\phi_i,\theta_i,\psi_i)^\top$ denote respondent $i$’s vector of latent trait scores. We model these jointly via a multivariate hierarchical regression:
+
+\begin{equation*}
+\boldsymbol{\eta}_i \;\sim\; \mathcal{N}_3\Bigl(\underbrace{\boldsymbol{\alpha}_{r_i} + \boldsymbol{\delta}_{q_i}}_{\text{Region + Party intercepts}} \;+\; B\,\mathbf{X}_i,\;\; \Omega \Bigr)
+\label{eq:structural_mvn}
+\end{equation*}
+
+where:
+\begin{itemize}
+  \item $\mathbf{X}_i$ is the vector of individual covariates for person $i$ (length $P_{\text{cov}}=13$, comprising 1 gender dummy, 5 age dummies, 6 education dummies, and the insecurity index).
+  \item $B$ is a $3\times 13$ matrix of regression coefficients for these covariates on the 3 latent dimensions. We denote the rows of $B$ as $B_{1,\cdot}$ for $\phi$ (optimism) effects, $B_{2,\cdot}$ for $\theta$ (environmentalism) effects, and $B_{3,\cdot}$ for $\psi$ (radicalism) effects.
+  \item $\boldsymbol{\alpha}_{r_i}$ is the 3-dimensional region-level intercept vector for the region $r_i$ in which respondent $i$ resides ($r_i \in \{1,\dots,10\}$). Similarly, $\boldsymbol{\delta}_{q_i}$ is the 3-dimensional party-level intercept vector for the party $q_i$ that respondent $i$ affiliates with ($q_i \in \{1,\dots,6\}$).
+  \item $\Omega$ is the $3\times 3$ residual covariance matrix for the latent traits, constrained to be a correlation matrix (diagonal elements = 1). The off-diagonal elements $(\rho_{\phi,\theta}, \rho_{\phi,\psi}, \rho_{\theta,\psi})$ capture correlations among the latent dimensions not explained by covariates or group intercepts.
+\end{itemize}
+
+This gives us for each dimension:
+\begin{align*}
+\phi_i &= \alpha_{r_i,1} + \delta_{q_i,1} + B_{1,\cdot}\,\mathbf{X}_i + \xi_{i,1},\\
+\theta_i &= \alpha_{r_i,2} + \delta_{q_i,2} + B_{2,\cdot}\,\mathbf{X}_i + \xi_{i,2},\\
+\psi_i &= \alpha_{r_i,3} + \delta_{q_i,3} + B_{3,\cdot}\,\mathbf{X}_i + \xi_{i,3},
+\end{align*}
+where $(\xi_{i,1}, \xi_{i,2}, \xi_{i,3})^\top \sim \mathcal{N}(\mathbf{0},\Omega)$ are the individual-level residuals.
+
+We use a non-centered parameterisation for the latent trait vector $\boldsymbol{\eta}_i$ to improve sampling efficiency and convergence. Specifically, we sample raw standard-normal draws $\mathbf{z}_i \sim \mathcal{N}(\mathbf{0}, I_3)$ and transform them as $\boldsymbol{\eta}_i = \mu_i + L_{\eta} \mathbf{z}_i$, where $\mu_i = \boldsymbol{\alpha}_{r_i} + \boldsymbol{\delta}_{q_i} + B \mathbf{X}_i$ is the mean structure and $L_{\eta}$ is the Cholesky factor of the residual correlation matrix $\Omega$.
+
+\subsection{Priors \& Estimation}
+
+We specify weakly informative priors on all parameters, following Gelman et al.\ (2013). These priors were iteratively refined via prior predictive checks (see Appendix~\ref{app:diagnostics}). Although further tuning (and more appropriate likelihood specifications/assumptions) could further improve the priors’ coverage of the observed data in the prior predictive stage, our posterior predictive checks confirm that the model - given the current priors and available data - successfully recovers the key group‐level patterns of  interest. Remaining discrepancies appear primarily at the item-response level rather than at the group level, reflecting the Gaussian measurement assumption’s limitations in matching the exact shape of individual item distributions - however these do not compromise our higher-level substantive inferences, and so we leave as is for the time being.  
+
+\begin{itemize}
+  \item \textbf{Factor Loadings \& Residuals:} For each item \(j\) in the optimism, environment and radical‐reform blocks,
+    \[
+      \beta_j^{(\cdot)} \sim \mathcal{N}(0,\,0.5), 
+      \quad
+      \lambda_j^{(\cdot)} \sim \mathrm{Lognormal}(\log 1,\,0.2)\ (\lambda_j>0),
+      \quad
+      \sigma_j^{(\cdot)} \sim \mathcal{N}(1,\,0.2)\ (\sigma_j>0).
+    \]
+   \item \textbf{Covariate Effects (Slopes in \(B\)):} Each coefficient 
+    \(\beta^{(\ell)}_{p}\sim\mathcal{N}(0,\,0.5)\). On our standardised latent scale, this concentrates most effects within \(\pm1\).
+    
+    \item \textbf{Region Intercepts:} For each region \(r=1,\dots,R\), we draw a raw intercept vector
+    \[
+    \boldsymbol{\alpha}^{\mathrm{raw}}_r\sim\mathcal{N}_3(\mathbf{0},I_3), 
+      \quad
+      \sigma_{\alpha,\ell}\sim\mathcal{N}(0,\,0.1)\ \text{truncated to }(0,\infty),
+      \quad
+      L_{\alpha}\sim\mathrm{LKJ}(2),
+    \]
+    and then set
+    \[
+      \boldsymbol{\alpha}_r 
+      = D_\alpha\,L_\alpha\,\boldsymbol{\alpha}^{\mathrm{raw}}_r,
+      \quad
+      D_\alpha=\mathrm{diag}(\sigma_{\alpha,1},\sigma_{\alpha,2},\sigma_{\alpha,3}).
+    \]
+    
+    \item \textbf{Party Intercepts:} Similarly, for each party \(q=1,\dots,Q\), we draw
+    \[
+      \boldsymbol{\delta}^{\mathrm{raw}}_q\sim\mathcal{N}_3(\mathbf{0},I_3), 
+      \quad
+      \sigma_{\delta,\ell}\sim\mathcal{N}(0,\,0.1)\ \text{truncated to }(0,\infty),
+      \quad
+      L_{\delta}\sim\mathrm{LKJ}(2),
+    \]
+    and set
+    \[
+      \boldsymbol{\delta}_q 
+      = D_\delta\,L_\delta\,\boldsymbol{\delta}^{\mathrm{raw}}_q,
+      \quad
+      D_\delta=\mathrm{diag}(\sigma_{\delta,1},\sigma_{\delta,2},\sigma_{\delta,3}).
+    \]
+
+  \item \textbf{Latent Residual Covariance:} We use a non‐centered parameterisation for \(\eta_i\).  
+  
+  The marginal standard deviations $\tau_{\eta,\ell}$ define the scale of the latent residual variation, with $\tau_{\eta,1}, \tau_{\eta,2} \sim \mathcal{N}^{+}(0, 0.3)$ and $\tau_{\eta,3} \sim \mathcal{N}^{+}(0, 0.1)$. The Cholesky factor $L_{\eta}$ of the correlation matrix is drawn via an $\mathrm{LKJ}(2)$ prior, so that the full residual correlation matrix is given by $\Omega = L_\eta \mathrm{diag}(\tau_{\eta}) \cdot \mathrm{diag}(\tau_{\eta})^\top L_\eta^\top$.
+\end{itemize}
+
+The model is implemented in Stan and we run four parallel MCMC chains using a NUTS sampler for 3000 iterations each, discarding the first 1000 as warm‐up. Convergence diagnostics indicate no inference problems, with $\hat{R} < 1.01$ for all parameters (Figure ~\ref{fig:r-hat}, and both bulk and tail effective sample sizes (ESS) $\geq$ 200 for all investigated parameters. Similarly, no chains hit the max tree depth, nor were there problematically divergent traditions, all chains exhibited sufficient energy exploration with $\mathrm{BFMI} > 0.2$, and trace plots indicate good mixing of the chains. Prior predictive checks confirmed the priors priors to be reasonable, and posterior predictive checks show that the model replicates observed data distributions well (both prior- and posterior-predictive checks are discussed further in Appendix~\ref{app:diagnostics}).
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.75\linewidth]{rhat_histogram.png}
+    \label{fig:r-hat}
+    \caption{Histogram of R-hat values for all parameters - no values above 1.01 threshold}
+\end{figure}
+
+\section{Results}
+
+\subsection{Latent Trait Overview}
+
+Each respondent receives posterior estimates for their $\phi$ (optimism), $\theta$ (environmentalism), and $\psi$ (radicalism) scores, each constrained to have unit variance by model design. Overall reliabilities for each factor are high (see Table~\ref{tab:reliabilities}), again underscoring that the item batteries coherently capture their intended constructs and that a one-factor model fit each item set well enough for our purposes (\(\Omega\) reliability for each factor $\geq$ 0.7).
+
+\begin{table}[ht]
+    \centering
+    \begin{tabular}{ll}
+    \toprule
+    Item block & Mean $\omega$ \\
+    \midrule
+    $\omega_{env}$ & 0.90 \\
+    $\omega_{opt}$ & 0.94 \\
+    $\omega_{rad}$ & 0.93 \\
+    \bottomrule
+    \end{tabular}
+    \caption{Factor Reliabilities}
+    \label{tab:reliabilities}
+\end{table}
+
+Crucially, the three latent dimensions remain moderately interrelated even after accounting for individual-level covariates and group-level effects (Table~\ref{tab:resid_corr} for point estimates; Figure~\ref{fig:corr_dist} for full posterior distributions). These are residual correlations from the multivariate regression model and reflect the degree of shared variation among the latent traits that is \emph{not explained} by party, region, or individual characteristics.\footnote{\textbf{Note}: here we do not report the \textit{marginal} correlation between latent traits, although in retrospect this might have provide a more intuitive descriptive quantity.}
+
+\begin{table}[ht]
+  \centering
+  \begin{tabular}{lc}
+    \toprule
+    Pair & Correlation \\
+    \midrule
+    $\phi$--$\theta$ &  0.37 \\
+    $\phi$--$\psi$   & -0.48 \\
+    $\theta$--$\psi$ & -0.28 \\
+    \bottomrule
+  \end{tabular}
+  \caption{Latent Trait Residual Correlations}
+  \label{tab:resid_corr}
+\end{table}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.75\linewidth]{latent_corr_with_point_estimate.png}
+    \label{fig:corr_dist}
+\end{figure}
+
+The correlation between optimism and environmentalism is moderately positive ($\rho_{\phi,\theta} \approx +0.37$), indicating that (even conditional on age, education, and party) individuals with stronger pro-environmental attitudes also tend to be more optimistic about economic prospects. By contrast, optimism and radicalism are negatively associated ($\rho_{\phi,\psi} \approx -0.48$), meaning that those inclined toward radical reforms tend to exhibit lower economic optimism, net of covariates. Finally, environmentalism and radicalism are also negatively correlated ($\rho_{\theta,\psi} \approx -0.28$), suggesting that support for radical systemic change is not a defining feature of most environmentalists in the sample. Instead, many who prioritise environmental concern also express optimism and moderation in their attitudes toward systemic overhaul. Conversely, support for radical change tends to be concentrated among those who are more pessimistic about the economic future and prioritise structural dissatisfaction over environmental action.
+
+\subsection{Party‐Level Differences}
+
+Table~\ref{tab:party_intercepts} and Figure~\ref{fig:party_intercept} display the posterior means of the party‐level random intercepts for each latent trait, conditional on individual covariates.
+
+\begin{table}[H]
+  \centering
+  \label{tab:party_intercepts}
+  \begin{tabular}{lccc}
+    \toprule
+    Party            & $\boldsymbol{\phi}$ Optimism & $\boldsymbol{\theta}$ Environmentalism & $\boldsymbol{\psi}$ Radical-Reform \\
+    \midrule
+    Green            & $-0.092$   & $+0.092$   & $+0.027$   \\
+    Labour           & $+0.51$    & $+0.14$    & $-0.26$    \\
+    Plaid Cymru      & $-0.11$    & $+0.0071$  & $+0.066$   \\
+    SNP              & $-0.16$    & $-0.068$   & $+0.076$   \\
+    Liberal Democrat & $+0.21$    & $+0.17$    & $-0.13$    \\
+    Conservative     & $+0.26$    & $+0.030$   & $-0.0097$  \\
+    Reform UK        & $-0.23$    & $-0.22$    & $+0.13$    \\
+    Another party    & $-0.28$    & $-0.044$   & $+0.074$   \\
+    Don’t know       & $+0.075$   & $+0.030$   & $+0.010$   \\
+    Won’t vote       & $+0.010$   & $-0.064$   & $-0.073$   \\
+    \bottomrule
+  \end{tabular}
+  \caption{Party-group intercepts for latent traits (posterior means)}
+\end{table}
+
+\begin{figure}[H]
+    \centering    
+  \includegraphics[width=1.1\linewidth]{party_group_effects_distributions}
+  \caption{Party‐group intercepts (posteriors distributions)}
+    \label{fig:party_intercept}
+\end{figure}
+
+For environmentalism ($\theta$), most non-Conservative parties exceed the overall mean environmental concern, yet it is striking that the Greens do not lead the field. This ranking could reflect a covariate‐selection artefact - if Greens skew along one of the traits already in the model, then that trait's direct coefficient might soak up some of their environmental advantage. To further disentangle this, one could easily re-estimate the model without key demographics or compute and compare population-average predictions by party (see critiques and extension proposals below).
+
+In sum, party affiliation remains a powerful predictor of all three latent dimensions (i.e. explains substantial between-party variation). Environmentalism tends to cluster among non‐Conservative camps (but with only modest distinctions among them), radicalism is highest among fringe and non-mainstream supporters, and economic optimism ($\phi$) is strongest for Labour and Conservative voters.  The wider uncertainty for parties like the SNP and Plaid Cymru likely reflects smaller sample sizes and greater within-party heterogeneity for nationally-associated parties.
+
+\subsection{Region‐Level Differences}
+
+\begin{table}[ht]
+  \centering
+  \begin{tabular}{lccc}
+    \toprule
+    Region                    & $\boldsymbol{\phi}$ Optimism & $\boldsymbol{\theta}$ Environmentalism & $\boldsymbol{\psi}$ Radical-Reform \\
+    \midrule
+    Yorkshire \& the Humber   & $-0.053$  & $+0.0016$  & $-0.0026$   \\
+    West Midlands             & $-0.033$  & $-0.0057$  & $-0.0025$   \\
+    Scotland                  & $-0.0030$ & $-0.036$   & $-0.0056$   \\
+    Wales                     & $-0.021$  & $-0.067$   & $-0.0053$   \\
+    North West                & $+0.0055$ & $+0.013$   & $+0.0039$   \\
+    Eastern                   & $+0.020$  & $+0.047$   & $+0.0038$   \\
+    South West                & $-0.039$  & $-0.0021$  & $+0.00060$  \\
+    East Midlands             & $+0.036$  & $-0.0050$  & $+0.0052$   \\
+    London                    & $+0.11$   & $+0.076$   & $+0.0014$   \\
+    South East                & $-0.016$  & $-0.017$   & $+0.00020$  \\
+    \bottomrule
+  \end{tabular}
+    \caption{Region-group intercepts on latent traits (posterior means)}
+    \label{tab:region_intercepts}
+\end{table}
+
+\begin{figure}[H]
+    \centering    
+  \includegraphics[width=1.1\linewidth]{region_group_effects_distributions}
+  \caption{Region‐group intercepts (posterior distributions)}
+    \label{fig:region_intercept}
+\end{figure}
+
+Our region intercepts in Table~\ref{tab:region_intercepts} and Figure~\ref{fig:region_intercept} reveal only modest geographic variation across all three latent dimensions once demographics and party affiliation are accounted for. Environmentalism ($\theta$) intercepts range from –0.067 (Wales) to +0.076 (London), a span of 0.14 standard deviations - small compared to party‐level differences - as was the span of 0.16 standard deviations for Economic Optimism ($\phi$) intercepts, while all of the Radical‐Reform ($\psi$) intercepts' are effectively zero once other predictors are included (i.e. their 95\% credibile intervals fail to exclude the null). 
+
+These narrow ranges indicate that, after accounting for demographics and party, region contributes little additional variation to respondents’ latent attitudes.
+
+\subsection{Individual-level Demographic Covariate Effects}
+
+\begin{table}[ht]
+  \centering
+  \begin{tabular}{lccc}
+    \toprule
+    Covariate                          & $\boldsymbol{\phi}$ Optimism & $\boldsymbol{\theta}$ Environmentalism & $\boldsymbol{\psi}$ Radical-Reform \\
+    \midrule
+    \textbf{Gender}                    &                              &                                        &                                     \\
+    \quad Male (reference)                   & $0.000$                      & $0.000$                                & $0.000$                             \\
+    \quad Female                       & $-0.148$                     & $-0.022$                               & $+0.037$                            \\
+    \addlinespace
+    \textbf{Age}                       &                              &                                        &                                     \\
+    \quad 18–24 (reference)                  & $0.000$                      & $0.000$                                & $0.000$                             \\
+    \quad 25–34                        & $+0.068$                     & $-0.003$                               & $+0.061$                            \\
+    \quad 35–44                        & $-0.004$                     & $-0.030$                               & $+0.113$                            \\
+    \quad 45–54                        & $-0.251$                     & $-0.181$                               & $+0.202$                            \\
+    \quad 55–64                        & $-0.314$                     & $-0.190$                               & $+0.216$                            \\
+    \quad 65+                          & $-0.377$                     & $-0.194$                               & $+0.261$                            \\
+    \addlinespace
+    \textbf{Education}                &                              &                                        &                                     \\
+    \quad No qualifications (reference)     & $0.000$                      & $0.000$                                & $0.000$                             \\
+    \quad Apprenticeship               & $-0.130$                     & $-0.110$                               & $+0.056$                            \\
+    \quad Other                        & $-0.100$                     & $-0.034$                               & $+0.008$                            \\
+    \quad Level 1                      & $-0.100$                     & $+0.053$                               & $-0.015$                            \\
+    \quad Level 2                      & $-0.102$                     & $-0.007$                               & $-0.017$                            \\
+    \quad Level 3                      & $-0.166$                     & $-0.049$                               & $+0.015$                            \\
+    \quad Level 4+                     & $+0.082$                     & $+0.057$                               & $-0.059$                            \\
+    \addlinespace
+    \textbf{Material insecurity (1 SD $\uparrow$)} & $+0.048$      & $+0.155$                               & $+0.006$                            \\
+    \bottomrule
+  \end{tabular}
+  \vspace{1ex}
+  \caption{Posterior mean covariate effects on latent traits.}
+  \label{tab:covariate_effects}
+  \footnotesize
+  \textbf{Note:} Values are posterior mean coefficients; individual covariates are standardised or coded as 0/1 dummy variables, so their coefficients can be interpreted in roughly comparable units (the education and age effects are differences relative to a baseline category).
+\end{table}
+
+\begin{figure}[H]
+    \centering    
+  \includegraphics[width=0.85\linewidth]{covariate_effects_overlapping_ridgelines}
+  \caption{Demographic-covariate effects Heatmap}
+    \label{fig:covar_effect_heatmap}
+\end{figure}
+
+\begin{figure}[H]
+    \centering    
+  \includegraphics[width=\linewidth]{covariate_effects_heatmap}
+  \caption{Demographic-covariate effect Posteriors Distributions}
+    \label{fig:covar_effects}
+\end{figure}
+
+Table~\ref{tab:covariate_effects} and Figures~\ref{fig:covar_effect_heatmap} \& \ref{fig:covar_effects} display the posterior mean coefficients for all individual‐level predictors. These covariate effects reveal that, contrary to expectation, (once party and region intercept effects have been account for) economic insecurity aligns with greater environmental concern rather than lower, and that older respondents - while less optimistic and less environmentalist - are actually more open to radical reform. Education's effect is ambiguous across classes and not statistically significant except at the university degree level. 
+
+Notably, party affiliation accounts for substantially more variance in all three traits than any single demographic predictor. Future extensions could calculate marginal versus conditional $R^2$ to formally decompose the relative contributions of fixed (demographic) and random (party/region) effects.  
+
+\subsection{Variance Explained (R\(^2\))}
+
+\begin{table}[ht]
+  \centering
+    \begin{tabular}{ll}
+    \toprule
+    block & mean $R^2$ \\
+    \midrule
+    $R^2_{env}$ & 0.39 \\
+    $R^2_{opt}$ & 0.61 \\
+    $R^2_{rad}$ & 0.22 \\
+    \bottomrule
+    \end{tabular}
+    \caption{Point estimates of Bayesian $R^2$ for each latent dimension, under the full model}
+    \label{tab:r^2}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\linewidth]{r2_posteriors.png}
+    \caption{Posterior $R^2$ Distributions}
+    \caption{Full distributions of Bayesian $R^2$ for each latent dimension, under the full model}
+    \label{fig:r^2_dist}
+\end{figure}
+
+Optimism shows the highest explained variance, with over 60\% of variation in economic outlook accounted for by our predictors - reflecting strong alignment of economic attitudes with demographic and group‐level factors. Environmental concern is moderately well explained, while radical‐reform attitudes remain the most idiosyncratic (with only $\approx$ 22\% explained), highlighting a large residual component unaccounted for within our model. If drivers of populism and anti-status quo attitudes are of substantive interest, our structural model should be expanded.
+
+\section{Discussion \& Policy Implications}
+
+\begin{enumerate}
+   \item \textbf{Climate Concern is Broad, Political, and Nuanced:} Contrary to conventional wisdom, environmentalism (\(\theta\)) is highest among \emph{Liberal Democrats} (+0.17) and \emph{Labour} supporters (+0.14), with \emph{Greens} in third place (+0.09). This pattern shows that strong pro-environment concern has diffused across the main centre-left parties, and the Green Party’s distinctiveness on climate is modest. Further diagnostics are needed to investigate the drivers of this effect, which may look different under robustness/sensitivity checks (i.e. omitting certain demographics) and population-averaged predictions. Accordingly, communicators should frame climate action in ways that resonates with centre/centre-right values (such as national pride in innovation, market opportunities in green tech, or stewardship of the countryside. Future research should identify further concrete communication themes that resonate with identified audiences.
+
+  \item \textbf{Surprising Underperformance of Greens on Environment:} As above, one interpretation is that by 2025, climate concern is  not distinctive to the Greens; however, another interpretation is that some of those who vote Green are motivated by a broader anti-establishment ethos (captured by $\psi$) and are perhaps disillusioned former Labour voters, etc., meaning their primary driver isn’t always environmentalism \textit{per se}. This hypothesis is motivated by recent centrist developments under Keir Starmer and his recent electoral victory, repositioning the Greens as the party of leftist opposition, and could be validated and explored by disaggregating the two combined (by us) voting items - the past election where Labour one vs. a fictional election tomorrow - to see if there are differences between the two. Indeed, whereas Labour's intercept on radicalism was noticeably down at -0.26, the Green Party's was positive but not extreme, and was less radical than the “Other” non-partisans and Reform UK. This is consistent with the mechanism whereby the Greens currently attract a mix of dedicated environmentalists and more general protest voters. Climate campaigners should recognise substantial support among Labour and LibDem bases for strong climate action. For the Green Party itself, the result might prompt reflection: if even your voters aren’t dramatically more climate-concerned than others, simply “being the climate party” may not continue to yield large electoral dividends, but ought to emphasise other policy differentiators, or deeper institutional reforms.
+
+  \item \textbf{Demographic Divides – Age and (not) Education:}  Older cohorts score lower on environmentalism (65+ at –0.19) but, higher on radical reform (65+ at +0.26).  Meanwhile, a university degree confers only a small boost to environmentalism (+0.06; not statistically significant). The age-radicalism pattern challenges stereotypes of youth-driven radicalism and suggests that older Britons also harbour significant appetite for systemic change. Messaging around meaningful reform could resonate strongly with older demographics, while younger cohorts - already optimistic and pro-environment - may require more advanced, participatory engagement. Other candidate demographic covariates should be considered in future expansions.
+
+  \item \textbf{Material Insecurity and Attitudes:} Orthogonal to the the usual belief that material security is a pre-requisite for supporting potentially economically-disruptive climate policy, our model finds that higher material insecurity is in fact associated with \emph{greater} environmental concern (+0.16) and slightly \emph{higher} optimism (+0.05), with virtually no effect on radicalism. Accordingly, framing green policies around economic opportunity - such as job creation and cost savings - could effectively mobilise these insecure but optimistically pro-climate constituencies. 
+
+  \item \textbf{Strategic Audience Segmentation:}  The multi-dimensional nature of public attitudes captured by $\phi$, $\theta$, $\psi$ allow climate communicators to segment their audience and tailor messages accordingly. The positive correlation between environmentalism and optimism (\(\rho_{\phi,\theta}\approx+0.375\)) and the negative link to radicalism (\(\rho_{\theta,\psi}\approx-0.278\)) imply that \emph{optimistic environmentalists} (high \(\theta\), high \(\phi\), low \(\psi\)) form a large, reachable segment. By contrast, \emph{radical pessimists} (high \(\psi\), low \(\phi\), low \(\theta\)) are relatively rare and concentrated among fringe voters. Broad climate campaigns should emphasise hopeful, practical solutions, while niche channels may be needed to engage those favouring systemic overhaul.  
+
+  Our model can be leveraged for targeted messaging and audience segmentation by either further computing downstream population‐averaged predictions - both conditional on given covariates and via post‐stratification (MRP) - or by generating latent‐score predictions for hypothetical respondents defined by specific covariate profiles. The population-averaged predictions we leave for future work, but below we illustrate generating hypothetical respondents with two example personas:
+    \begin{enumerate}
+        \item A 65-year-old male Reform UK supporter with no qualifications, one-SD above the mean in material insecurity, living in the South West (Figure~\ref{fig:person_profile_1}). His predicted latent (point-estimate) scores are  
+        \[
+        \hat\phi \;\approx\;-0.60,\quad
+        \hat\theta \;\approx\;-0.26,\quad
+        \hat\psi \;\approx\;+0.40.
+        \]
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=0.75\linewidth]{example_target_profiles/Elderly_Male_Reform_UK_No_Qualifications_High_Insecurity_South_East.png}
+            \label{fig:person_profile_1}
+        \end{figure}
+
+        \item  A 45–54-year-old female Labour supporter with a university degree, one-SD below the mean in material insecurity, living in the North West. (Figure~\ref{fig:person_profile_2}) Her predicted (point-estimate) scores are  
+        \[
+        \hat\phi \;\approx\;+0.15,\quad
+        \hat\theta \;\approx\;-0.15,\quad
+        \hat\psi \;\approx\;-0.08.
+        \]
+
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=0.75\linewidth]{example_target_profiles/Mid_Age_Female_Labour_Univ_Grad_Low_Insecurity_North_West.png}
+            \label{fig:person_profile_2}
+        \end{figure}
+    \end{enumerate}
+
+    Similarly, regional and party profiles can be built by locating $\alpha$ and $\delta$ intercept coordinates in attitude ($\phi$, $\theta$, $\psi$) space; analysing how they cluster can support climate actors in crafting effective strategic communication and resource allocation/prioritisation: 
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.75\linewidth]{region_psi_vs_phi_col_env.png}
+        \label{fig:region_profile_1}
+    \end{figure}
+    
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.75\linewidth]{region_psi_vs_theta_col_opt.png}
+        \label{fig:region_profile_2}
+    \end{figure}
+    
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.75\linewidth]{region_theta_vs_phi_col_rad.png}
+        \label{fig:region_profile_3}
+    \end{figure}
+
+\end{enumerate}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{party_radar_charts.png}yes
+  \caption{Party profiles as radar charts in attitude \((\phi,\theta,\psi)\) space.}
+  \label{fig:party_radar}
+\end{figure}
+
+\section{Limitations and Future Directions}
+\label{sec:limitations}
+
+\subsection{Modelling Simplifications}
+
+Our approach made several simplifying assumptions. First, we treated ordinal survey items as continuous, applying a linear factor model. While convenient and commonly done, a more rigorous approach would use an ordinal IRT using a cumulative probit/logistic model (e.g., a graded response model with threshold parameters for Likert items). Treating 5-point scales as roughly interval can introduce some error if, for instance, the gaps between “Strongly Agree” and “Somewhat Agree” are not consistent. We judged this acceptable given our focus on group differences (which tend to be robust to such transformations) and to keep the model manageable. We anticipate the substantive conclusions would remain, however an ordinal latent trait model would give improved fit and perhaps slightly different estimates for extreme respondents. 
+
+Second, we assumed the latent traits are normally distributed (by virtue of the multivariate normal in the structural model). In reality, public opinion distributions can be skewed or multimodal (perhaps a large mass of moderately pro-environment people and a small cluster of very sceptical people). Our model might not capture heavy skewness perfectly. Posterior predictive checks did indicate some slight underestimation of extreme responses on a couple of items, which could hint at latent skewness (see Appendix~\ref{app:diagnostics}). A more flexible approach could use non-parametric mixing or allow heavier-tailed distributions. Nonetheless, the normal assumption, coupled with group-specific intercepts, seemed to fit well in aggregate.
+
+\subsection{Lack of Interaction Effects}
+
+Our current model includes only additive effects, potentially averaging out important heterogeneity. Future extensions could incorporate interactions, such as covariate-by-covariate effects (e.g., economic insecurity and education jointly affecting environmentalism), covariate-by-group interactions (e.g., by allowing the group intercepts and individual slopes themselves to have correlations - such as differing age effects across political parties), or even latent-by-latent interactions (e.g., the combined effect of environmentalism and radical reform attitudes on policy support). A primary motivation for hierarchical Bayesian models is that they offer shrinkage / pooling of information to mitigate risks of overfitting that might otherwise arise from increasing model complexity in these ways, enabling deeper more sophistical exploration of attitudinal patterns.
+
+\subsection{Decomposing R\(^2\)}
+
+We report an overall Bayesian $R^2$ for each trait under the full model (Table~\ref{tab:r^2}), but it would have been useful to distinguish between:
+\begin{itemize}
+    \item Marginal $R^2$: the variance explained by the fixed (demographic) predictors alone.  
+    \item Conditional $R^2$: the variance explained by both fixed effects and group‐level random effects (party and region).
+\end{itemize}
+
+Because our outcomes are latent and estimated jointly, computing these two $R^2$ values requires extracting the variance contributions of each model component from the posterior - a nontrivial step we defer to future work. A full variance decomposition would tell us, for example, what share of variance in environmentalism is due exclusively to demographics, to party affiliation, to region, or to their overlap. This would have useful/actionable implications for targeting of strategic communications and audience segmentation. 
+
+\subsection{Model Fit Nuance}
+
+Even though our model reproduces broad patterns well, it is inherently linear and additive, so it may smooth over certain “mixed” profiles. For instance, as $\phi$ and $\psi$ are negatively correlated ($r = –0.48$; Table \ref{tab:resid_corr}), respondents who are pessimistic about the economy (low $\phi$) tend to favour radical reform (high $\psi$), and vice versa. Truly mixed profiles - such as “pessimistic non-radicals” (low $\phi$, low $\psi$) or “optimistic radicals” (high $\phi$, high $\psi$) - fall off this linear trend and may therefore be under-fit. In a larger sample one could probe these subgroups more directly by fitting a latent-class or mixture model to identify respondents whose joint trait distributions deviate from the linear expectation.
+
+\subsection{Survey and Measurement Limitations}
+
+All data used herein are self-reported attitudes at one point in time. This means that (1) the cross-sectional data does not benefit from dynamic or causal modelling (e.g. to evaluate if and how these latent traits shift in response to external events or evolving policy debates), nor does it benefit from repeat validation over time. (2) Social desirability bias could affect responses on environmental questions (perhaps some respondents gave “greener” answers than their true beliefs). If such bias varies by group (e.g., maybe younger, educated respondents feel more pressure to say the socially desirable pro-climate answer), it could inflate estimated differences. We tried to mitigate this by focusing on relative comparisons and using multiple items (reducing random error), but it’s a caution. 
+
+Moreover, our radical-reformism construct mixes varieties of system-change attitudes. Future research could refine this construct, or examine it in a conditional sense (e.g., are people more willing to support radical measures \emph{if} they are convinced climate change is an emergency?).
+
+\subsection{Future Work}
+
+In addition to implementing ordinal IRT, interaction effects, and dynamic modelling, several further extensions could enhance the analytical scope and interpretability of our model. First, we could leverage demographic and party-composition data through Multilevel Regression and Poststratification (MRP), estimating detailed distributions of latent attitudes within each parliamentary constituency. Additionally, adopting a multivariate response extension would allow us to model responses to concrete climate-policy support questions (e.g., endorsement of carbon taxes or renewable energy subsidies) jointly rather than individually. Formally, this involves specifying a multivariate response model such as
+
+$$
+\mathbf{y}_i \sim \mathrm{MVN}\left(\boldsymbol{\mu}_i,\, \Sigma_y\right), \quad\text{where}\quad \boldsymbol{\mu}_i = \Lambda\,\boldsymbol{\eta}_i + B\,\mathbf{x}_i.
+$$
+
+Here, $\mathbf{y}_i = (y_{i,1},\dots,y_{i,K})$ represents an individual's responses to a set of $K$ climate-policy support items, and $\boldsymbol{\eta}_i = (\phi_i,\theta_i,\psi_i)$ denotes the vector of latent traits (optimism, environmentalism, radicalism). This multivariate approach enables us to disentangle precisely how each latent dimension influences specific policy preferences — for instance, determining whether environmentalism ($\theta$) or radicalism ($\psi$) more strongly predicts support for ambitious initiatives such as a Green New Deal. Extending the model further to incorporate actual policy outcomes or observed behavioural data would bridge the gap between latent attitudes and concrete actions (attitude-behaviour congruence). For example, we could model local adoption of climate policies as outcomes driven by the regional distributions of latent traits, formally represented as hierarchical regression:
+
+$$
+\text{policy outcome}_{r} \sim f(\boldsymbol{\alpha}_r, \text{regional covariates}),
+$$
+
+where $\boldsymbol{\alpha}_r$ denotes region-level latent trait intercepts. Translating latent trait measures into interpretable metrics in this way would facilitate communication, and when paired with actual election outcomes, could identify discrepancies between MPs' climate-related actions and their constituents' expressed climate priorities, highlighting high-leverage attitude-behaviour gaps.
+
+\section{Conclusion}
+
+This research note demonstrates the utility of Bayesian hierarchical latent trait models for capturing nuanced public attitudes toward climate policy in Britain. 
+
+From a methodological perspective, our hierarchical Bayesian approach effectively captures individual-level variation and group-level heterogeneity across political parties and regions. By partial pooling of group-level intercepts, the model shrinks extreme estimates toward the overall mean, improving stability for small-sample categories and avoiding overfitting with this relatively complex model (and allowing further complexity to be added, beyond what we have here).
+
+Our findings offer valuable practical guidance for policymakers and climate communicators aiming to build broad, resilient coalitions for environmental action, by embracing multi-dimensional audience segmentation and framing strategies. Specifically, our model indicates that environmental concern is broadly diffused across political parties, challenging simplistic partisan narratives - although the multi-dimensional nature of that support varies by party-affiliation and region. Furthermore, the residual positive association between economic optimism and environmentalism underscores an important strategic insight for climate communicators: framing climate action around economic opportunity and hopeful, practical solutions is likely to resonate broadly. Similarly, contrary to conventional assumptions, material insecurity was found to correlate positively with pro-environmental attitudes, indicating that economically vulnerable populations in particular may be receptive to messages emphasising the economic benefits and employment opportunities associated with climate policy.
+
+\newpage
+\appendix
+\section{Appendixes}
+
+\subsection{Model Diagnostics}
+\label{app:diagnostics}
+
+\subsubsection{Prior Predictive Checks}
+\label{sec:prior_predic}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{prior_predictive_environment_density.png}
+    \label{fig:enter-label}
+    \caption{}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{prior_predictive_environment_person_means.png}
+    \label{fig:enter-label}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{prior_predictive_optimism_density.png}
+    \label{fig:enter-label}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{prior_predictive_optimism_person_means.png}
+    \label{fig:enter-label}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{prior_predictive_radical_density.png}
+    \label{fig:enter-label}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{prior_predictive_radical_person_means.png}
+    \label{fig:enter-label}
+\end{figure}
+
+\subsubsection{Posterior Predictive Checks: Category Frequencies}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{category_frequencies_optimism_item1.png}
+    \label{fig:enter-label}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{category_frequencies_radical_item1.png}
+    \label{fig:enter-label}
+\end{figure}
+
+\subsubsection{Posterior Predictive Checks}
+
+%env
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{posterior_predictive_environment_density.png}
+    \label{fig:enter-label}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{item_level_means_environment.png}
+    \label{fig:enter-label}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{posterior_predictive_environment_person_means.png}
+    \label{fig:enter-label}
+\end{figure}
+
+
+
+% opt
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{posterior_predictive_optimism_density.png}
+    \label{fig:enter-label}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{item_level_means_optimism.png}
+    \label{fig:enter-label}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{posterior_predictive_optimism_person_means.png}
+    \label{fig:enter-label}
+\end{figure}
+
+% rad
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{posterior_predictive_radical_density.png}
+    \label{fig:enter-label}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{item_level_radicalreform.png}
+    \label{fig:enter-label}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{posterior_predictive_radical_person_means.png}
+    \label{fig:enter-label}
+\end{figure}
+
+\subsubsection{Posterior Checks: Distributional Shape}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.65\linewidth]{densities_selected_params.png}
+    \label{fig:enter-label}
+    \caption{Each density is estimated from the full posterior and illustrates both central tendency and tail behaviour; 95\% credible intervals (not shown) confirm adequate posterior concentration under our weakly informative priors.}
+\end{figure}
+
+\subsubsection{MCMC Convergence and Trace Plots}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{rhat_histogram.png}
+    \label{fig:r-hat}
+    \caption{Histogram of R-hat values for all parameters - no values above 1.01 threshold}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{traceplots_selected_params.png}
+    \label{fig:trace}
+    \caption{Trace plots for selected parameters (\(\sigma_{\delta,1}\), \(\rho_{\phi,\theta}\), and a representative \(\beta\)). Chains mix well and show no divergences.}
+\end{figure}
+
+\newpage
+
+\nocite{*}
+\printbibliography
+
+\end{document}

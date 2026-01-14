@@ -1,0 +1,750 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage[top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{multirow,booktabs,graphicx,enumerate,float,fancyhdr,amsmath,amssymb,tcolorbox,xcolor,array,makecell}
+\setlength{\parindent}{0in}
+\setlength{\parskip}{1em}
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\footnotesize Bayesian Modelling – Research Note}
+\rhead{\footnotesize Henry Baker}
+\cfoot{\footnotesize \thepage}
+\begin{document}
+
+\thispagestyle{empty}
+\begin{tabular}{p{15.5cm}}
+{\large \bf Bayesian Modelling\\\hline}
+\end{tabular}
+
+\begin{center}
+{\Large \bf Research Note}\\
+1 - Model Specification\\
+Henry Baker (228755)\\
+\end{center}
+
+\section{Data and Preprocessing}
+
+\subsection{Survey Items and Raw Coding}
+
+\begin{enumerate}
+  \item \textbf{Economic‐Optimism Items (6 Likert questions)}  
+    \begin{itemize}
+      \item Questions (e.g.\ “To what extent do you feel optimistic or pessimistic about \(\dots\)?”) have response categories 
+        \[
+          \{\text{Very pessimistic},\;\text{Fairly pessimistic},\;\text{Neither},\;\text{Fairly optimistic},\;\text{Very optimistic}\}.
+        \]
+      \item Recode each item \(j\) for respondent \(i\):
+        \[
+          \text{opt}_{ij} 
+          =
+          \begin{cases}
+            -2, & \text{Very pessimistic},\\
+            -1, & \text{Fairly pessimistic},\\
+             0, & \text{Neither},\\
+             1, & \text{Fairly optimistic},\\
+             2, & \text{Very optimistic},
+          \end{cases}
+          \quad j=1,\dots,6.
+        \]
+      \item For each item \(j\), compute its sample mean \(\overline{\text{opt}}_{\!\cdot j}\) and SD \(\mathrm{SD}(\text{opt}_{\cdot j})\), then standardize:
+        \[
+          Y^{(\text{opt})}_{ij}
+          \;=\;
+          \frac{\text{opt}_{ij} \;-\;\overline{\text{opt}}_{\!\cdot j}}%
+               {\mathrm{SD}(\text{opt}_{\cdot j})},
+          \quad i=1,\dots,N,\;j=1,\dots,6.
+        \]
+      \item Denote \(\mathbf{Y}^{(\text{opt})} = [Y^{(\text{opt})}_{ij}]\in\mathbb{R}^{N\times 6}\).
+    \end{itemize}
+
+  \item \textbf{Environmental‐Priority Items (1 forced‐choice + 4 Likert)}  
+    \begin{itemize}
+      \item \emph{Forced‐choice item (Q121)}:  
+        \[
+          \begin{aligned}
+            &\text{Statement A: “Cost‐first”}\quad\bigl(\text{‘‘Action to reduce the cost of living has to come first over sustainability and being eco‐friendly.’’}\bigr),\\
+            &\text{Statement B: “Environment‐first”}\quad\bigl(\text{‘‘Protecting the natural environment is more important than rebuilding infrastructure.’’}\bigr).
+          \end{aligned}
+        \]
+        Recode
+        \[
+          \text{env}_{i0} =
+          \begin{cases}
+            0, & \text{if respondent chooses cost‐first (Statement A)},\\
+            1, & \text{if respondent chooses environment‐first (Statement B)}.
+          \end{cases}
+        \]
+        Then standardize: 
+        \(\widetilde{\text{env}}_{i0} = \bigl(\text{env}_{i0} - \overline{\text{env}}_{\!\cdot 0}\bigr)/\mathrm{SD}(\text{env}_{\cdot 0})\).
+      \item \emph{Four Likert items (Q122–Q125)}:  
+        \[
+          \{\text{Strongly disagree},\;\text{Somewhat disagree},\;\text{Neither},\;\text{Somewhat agree},\;\text{Strongly agree}\}.
+        \]
+        One of these (the cost‐first framing) is reverse‐coded.  Let \(k^\ast\) index that item.  For each \(k=1,\dots,4\):
+        \[
+          \text{env}_{ik}^{(\text{raw})} =
+          \begin{cases}
+            -2, & \text{Strongly disagree},\\
+            -1, & \text{Somewhat disagree},\\
+             0, & \text{Neither},\\
+             1, & \text{Somewhat agree},\\
+             2, & \text{Strongly agree}.
+          \end{cases}
+        \]
+        For the item \(k^\ast\) phrased in the “cost‐first” direction, multiply \(\text{env}_{i,k^\ast}^{(\text{raw})}\) by \(-1\) so that higher values always indicate greater pro‐environment priority.  Then standardize each column:
+        \[
+          \widetilde{\text{env}}_{ik} = \frac{\text{env}_{ik}^{(\text{raw})} - \overline{\text{env}}_{\!\cdot k}}{\mathrm{SD}(\text{env}_{\cdot k})}, 
+          \quad k=1,\dots,4.
+        \]
+      \item Stack the forced‐choice and the four Likert columns to form 
+        \(\mathbf{Y}^{(\text{env})} = [\,\widetilde{Y}^{(\text{env})}_{ik}\,]\in\mathbb{R}^{N\times 5},\;k=0,\dots,4.\)
+    \end{itemize}
+
+  \item \textbf{Radical‐Reform Items (8 forced‐choice questions)}  
+    For each respondent \(i\), there are eight pairs of statements (Q72–Q75; Q78–Q79; Q82–Q83).  We code each as follows: if respondent chooses the statement expressing a radical‐reform orientation, set \(\psi^{(\text{raw})}_{i\ell} = 1\); if chooses the status‐quo statement, set \(\psi^{(\text{raw})}_{i\ell} = 0\).  Concretely, index \(\ell=1,\dots,8\) for:
+
+    \[
+      \begin{aligned}
+        &\ell=1:\;\text{(Q72) “Westminster moved too slowly…” (radical) vs “…moved at a good pace…” (status quo)},\\
+        &\ell=2:\;\text{(Q73) “Looking for politicians who get things done” (radical) vs “…take time for long‐term goals” (status quo)},\\
+        &\ell=3:\;\text{(Q74) “Support those prepared to take radical action…” (radical) vs “…keep system broadly the same” (status quo)},\\
+        &\ell=4:\;\text{(Q75) “Britain is broken and needs radical action” (radical) vs “…is broadly doing fine” (status quo)},\\
+        &\ell=5:\;\text{(Q78) “UK not taking right steps…needs change” (radical) vs “…taking right steps” (status quo)},\\
+        &\ell=6:\;\text{(Q79) “UK headed wrong and needs radical reform” (radical) vs “…headed in right direction” (status quo)},\\
+        &\ell=7:\;\text{(Q82) “Acceptable for unelected bodies to decide” (radical) vs “Decisions should lie with elected reps” (status quo)},\\
+        &\ell=8:\;\text{(Q83) “Politicians have allowed unelected bodies too much power” (radical) vs“…Trust experts/unelected officials” (status quo).}
+      \end{aligned}
+    \]
+    Then for each \(\ell\), compute sample mean \(\overline{\psi}^{(\text{raw})}_{\!\cdot\ell}\) and SD \(\mathrm{SD}(\psi^{(\text{raw})}_{\cdot\ell})\), and standardize:
+    \[
+      Y^{(\text{rad})}_{i\ell}
+      = 
+      \frac{\psi^{(\text{raw})}_{i\ell} - \overline{\psi}^{(\text{raw})}_{\!\cdot\ell}}%
+           {\mathrm{SD}(\psi^{(\text{raw})}_{\cdot\ell})},
+      \quad \ell=1,\dots,8.
+    \]
+    Denote \(\mathbf{Y}^{(\text{rad})} = [\,Y^{(\text{rad})}_{i\ell}\,]\in\mathbb{R}^{N\times 8}.\)
+
+  \item \textbf{Material‐Insecurity Items (8 frequency items; Q90–Q97)}  
+    \begin{itemize}
+      \item Each of eight items (e.g.\ “I worry about meeting my bills”) has response categories 
+        \(\{\text{Never},\;\text{Occasionally},\;\text{Fairly often},\;\text{Very often}\}.\)
+      \item Recode 
+        \[
+          \text{insec}^{(\text{raw})}_{i\ell} =
+          \begin{cases}
+            0, & \text{Never},\\
+            1, & \text{Occasionally},\\
+            2, & \text{Fairly often},\\
+            3, & \text{Very often},
+          \end{cases}
+          \quad \ell=1,\dots,8.
+        \]
+      \item Compute composite 
+        \[
+          \text{insec}^\ast_i = \frac{1}{8}\sum_{\ell=1}^8 \text{insec}^{(\text{raw})}_{i\ell}.
+        \]
+      \item Standardize: 
+        \(\displaystyle \text{insec}_i = \frac{\text{insec}^\ast_i - \overline{\text{insec}}^\ast}{\mathrm{SD}(\text{insec}^\ast)}.\)
+        Thus \(\text{insec}_i\in\mathbb{R}\) is a continuous covariate.
+    \end{itemize}
+
+  \item \textbf{Demographic Covariates}  
+    \begin{itemize}
+      \item \emph{Gender:}  
+        \[
+          \text{gen}_i =
+          \begin{cases}
+            0, & \text{Male},\\
+            1, & \text{Female}.
+          \end{cases}
+        \]
+      \item \emph{Age Bracket (6 levels)}: Original codes \(1,\dots,6\) correspond to 
+        \(\{65+,\,55\text{–}64,\,45\text{–}54,\,35\text{–}44,\,25\text{–}34,\,18\text{–}24\}.\)  
+        Choose “18–24” (code 6) as reference.  Define five dummies:
+        \[
+          \begin{aligned}
+            \text{age}_{i,65+} &= 1_{\{\text{orig}_i=1\}},\quad
+            \text{age}_{i,55-64} = 1_{\{\text{orig}_i=2\}},\\
+            \text{age}_{i,45-54} &= 1_{\{\text{orig}_i=3\}},\quad
+            \text{age}_{i,35-44} = 1_{\{\text{orig}_i=4\}},\quad
+            \text{age}_{i,25-34} = 1_{\{\text{orig}_i=5\}}.
+          \end{aligned}
+        \]
+        If “18–24,” then all age dummies = 0.
+      \item \emph{Education Level (7 categories)}: Original codes \(1,\dots,7\) denote 
+        \(\{\text{Level 4+},\,\text{Level 2},\,\text{Level 1/Entry},\,\text{Level 3},\,\text{Apprenticeship},\,\text{No qualifications},\,\text{Other}\}.\)
+        Choose “No qualifications” (code 6) as reference.  Create six indicators:
+        \[
+          \begin{aligned}
+            \text{edu}_{i,L4+} &= 1_{\{\text{orig}_i=1\}},\quad
+            \text{edu}_{i,L2} = 1_{\{\text{orig}_i=2\}},\quad
+            \text{edu}_{i,L1} = 1_{\{\text{orig}_i=3\}},\\
+            \text{edu}_{i,L3} &= 1_{\{\text{orig}_i=4\}},\quad
+            \text{edu}_{i,\text{appr}} = 1_{\{\text{orig}_i=5\}},\quad
+            \text{edu}_{i,\text{other}} = 1_{\{\text{orig}_i=7\}}.
+          \end{aligned}
+        \]
+        If original = 6 (“No qualifications”), then all six = 0.
+      \item \emph{Party Affiliation (possibly merged categories)}:  
+        Let \(\text{vote\_tomorrow}_i,\text{vote\_recent}_i\) be reported.  Define
+        \[
+          \text{vote}_i = \text{coalesce}(
+            \text{vote\_tomorrow}_i,\,
+            \text{vote\_recent}_i
+          ),
+        \]
+        then map each party name (e.g.\ Conservative, Labour, Greens, Liberal Democrats, SNP, etc.) –and optionally “Another party,” “Don’t know,” “Won’t vote” (either separate or merged into “Other”)–to an integer \(q_i\in\{1,\dots,Q\}.\)
+        This \(q_i\) will index party‐level random intercepts.
+      \item \emph{Region (10 levels)}:  
+        Map each region string to an integer
+        \[
+          r_i \in \{1,\dots,10\}
+        \]
+        according to:
+        \[
+          1:\text{Yorkshire \& the Humber},\,
+          2:\text{West Midlands},\,
+          3:\text{Scotland},\,
+          4:\text{Wales},\,
+          5:\text{North West},\,
+          6:\text{Eastern},\,
+          7:\text{South West},\,
+          8:\text{East Midlands},\,
+          9:\text{London},\,
+          10:\text{South East}.
+        \]
+        Use \(r_i\) to index region‐level random intercepts.
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Final Design Matrices}
+
+\begin{itemize}
+  \item \(\mathbf{Y}^{(\text{opt})} \in \mathbb{R}^{N\times 6}\) of standardized economic‐optimism items.
+  \item \(\mathbf{Y}^{(\text{env})} \in \mathbb{R}^{N\times 5}\) of standardized environmental‐priority items.
+  \item \(\mathbf{Y}^{(\text{rad})} \in \mathbb{R}^{N\times 8}\) of standardized radical‐reform items.
+  \item \(\mathbf{X} = [\,\text{gen},\,\text{age}_{65+},\,\text{age}_{55-64},\,\text{age}_{45-54},\,\text{age}_{35-44},\,\text{age}_{25-34},\,\text{edu}_{L4+},\,\text{edu}_{L3},\,\text{edu}_{L2},\,\text{edu}_{L1},\,\text{edu}_{\text{appr}},\,\text{edu}_{\text{other}},\,\text{insec}\,] \in \mathbb{R}^{N\times 13}.\)
+  \item Party index vector \(\boldsymbol{q} = (q_1,\dots,q_N)\) with \(q_i\in\{1,\dots,Q\}.\)
+  \item Region index vector \(\boldsymbol{r} = (r_1,\dots,r_N)\) with \(r_i\in\{1,\dots,10\}.\)
+\end{itemize}
+
+\section{Model Specification}
+
+\subsection{Overview}
+
+We propose a hierarchical Bayesian model with:
+\begin{enumerate}
+  \item A \textbf{measurement model} for economic‐optimism (\(\phi_i\)) via 6 continuous indicators.
+  \item A \textbf{measurement model} for environmental‐priority (\(\theta_i\)) via 5 continuous indicators.
+  \item A \textbf{measurement model} for radical‐reform orientation (\(\psi_i\)) via 8 continuous indicators.
+  \item A \textbf{structural model} for the joint latent vector 
+    \(\boldsymbol{\eta}_i = (\phi_i,\,\theta_i,\,\psi_i)^\top\in\mathbb{R}^3,\)
+    regressing on region‐ and party‐level random intercepts and individual‐level covariates \(\mathbf{X}_i\).
+\end{enumerate}
+
+\subsection{Notation and Dimensions}
+
+\begin{itemize}
+  \item \(N\): total number of respondents.
+  \item \(P_{\text{opt}} = 6\): number of optimism items.
+  \item \(P_{\text{env}} = 5\): number of environmental items.
+  \item \(P_{\text{rad}} = 8\): number of radical‐reform items.
+  \item \(R = 10\): number of UK regions.
+  \item \(Q\): number of parties.
+  \item \(P_{\text{cov}} = 13\): number of individual‐level covariates (gender, age dummies, education dummies, insecurity).
+  \item \(\mathbf{Y}^{(\text{opt})} \in \mathbb{R}^{N\times 6}\) with entries \(Y^{(\text{opt})}_{ij}\).
+  \item \(\mathbf{Y}^{(\text{env})} \in \mathbb{R}^{N\times 5}\) with entries \(\widetilde{Y}^{(\text{env})}_{ik}\).
+  \item \(\mathbf{Y}^{(\text{rad})} \in \mathbb{R}^{N\times 8}\) with entries \(Y^{(\text{rad})}_{i\ell}\).
+  \item \(\mathbf{X} \in \mathbb{R}^{N\times 13}\) with rows \(\mathbf{X}_i^\top = (\,\text{gen}_i,\ldots,\text{insec}_i\,).\)
+  \item Region index \(\boldsymbol{r} \in \{1,\dots,10\}^N\).
+  \item Party index \(\boldsymbol{q} \in \{1,\dots,Q\}^N\).
+  \item Latent factors \(\phi_i,\theta_i,\psi_i\), collected into \(\boldsymbol{\eta}_i = (\phi_i,\,\theta_i,\,\psi_i)^\top \in \mathbb{R}^3.\)
+\end{itemize}
+
+\subsection{Measurement Models}
+
+\subsubsection{Economic‐Optimism}
+
+For each respondent \(i\) and item \(j=1,\dots,6\),
+\begin{equation}
+  Y^{(\text{opt})}_{ij} 
+  \;\sim\; 
+  \mathcal{N}\Bigl(\,\alpha^{(\text{opt})}_j + \lambda^{(\text{opt})}_j\,\phi_i,\;\sigma^{(\text{opt})\,2}_j\Bigr),
+  \label{eq:meas_opt}
+\end{equation}
+where \(\alpha^{(\text{opt})}_j\in\mathbb{R}\), \(\lambda^{(\text{opt})}_j>0\), and \(\sigma^{(\text{opt})}_j>0\).  
+
+\paragraph{Priors:} For \(j=1,\dots,6\),
+\[
+  \alpha^{(\text{opt})}_j \sim \mathcal{N}(0,1), 
+  \quad
+  \lambda^{(\text{opt})}_j \sim \mathrm{LogNormal}(0,1), 
+  \quad
+  \sigma^{(\text{opt})}_j \sim \text{Student‐}t_3(0,1)\quad(\text{half-}t).
+\]
+
+\subsubsection{Environmental‐Priority}
+
+For each \(i\) and item \(k=1,\dots,5\),
+\begin{equation}
+  \widetilde{Y}^{(\text{env})}_{ik} 
+  \;\sim\; 
+  \mathcal{N}\Bigl(\,\alpha^{(\text{env})}_k + \lambda^{(\text{env})}_k\,\theta_i,\;\sigma^{(\text{env})\,2}_k\Bigr),
+  \label{eq:meas_env}
+\end{equation}
+where \(\alpha^{(\text{env})}_k\in\mathbb{R}\), \(\lambda^{(\text{env})}_k>0\), and \(\sigma^{(\text{env})}_k>0\).
+
+\paragraph{Priors:} For \(k=1,\dots,5\),
+\[
+  \alpha^{(\text{env})}_k \sim \mathcal{N}(0,1), 
+  \quad
+  \lambda^{(\text{env})}_k \sim \mathrm{LogNormal}(0,1), 
+  \quad
+  \sigma^{(\text{env})}_k \sim \text{Student‐}t_3(0,1)\quad(\text{half-}t).
+\]
+
+\subsubsection{Radical‐Reform}
+
+For each \(i\) and item \(\ell=1,\dots,8\),
+\begin{equation}
+  Y^{(\text{rad})}_{i\ell}
+  \;\sim\;
+  \mathcal{N}\Bigl(\,\alpha^{(\text{rad})}_\ell + \lambda^{(\text{rad})}_\ell\,\psi_i,\;\sigma^{(\text{rad})\,2}_\ell\Bigr),
+  \label{eq:meas_rad}
+\end{equation}
+where \(\alpha^{(\text{rad})}_\ell\in\mathbb{R}\), \(\lambda^{(\text{rad})}_\ell>0\), and \(\sigma^{(\text{rad})}_\ell>0\).
+
+\paragraph{Priors:} For \(\ell=1,\dots,8\),
+\[
+  \alpha^{(\text{rad})}_\ell \sim \mathcal{N}(0,1), 
+  \quad
+  \lambda^{(\text{rad})}_\ell \sim \mathrm{LogNormal}(0,1), 
+  \quad
+  \sigma^{(\text{rad})}_\ell \sim \text{Student‐}t_3(0,1)\quad(\text{half-}t).
+\]
+
+\subsection{Structural Model: Trivariate Latent Regression}
+
+Collect \(\phi_i,\theta_i,\psi_i\) into 
+\[
+  \boldsymbol{\eta}_i 
+  = 
+  \begin{pmatrix}
+    \phi_i \\[4pt]
+    \theta_i \\[4pt]
+    \psi_i
+  \end{pmatrix}
+  \;\in\;\mathbb{R}^3.
+\]
+We assume
+\begin{equation}
+  \boldsymbol{\eta}_i \;\sim\; \mathcal{N}_3\Bigl(\,
+    \underbrace{
+      \begin{pmatrix}
+        \alpha_{\,r_i,\,1} \\[4pt]
+        \alpha_{\,r_i,\,2} \\[4pt]
+        \alpha_{\,r_i,\,3}
+      \end{pmatrix}
+      \;+\;
+      \begin{pmatrix}
+        \delta_{\,q_i,\,1} \\[4pt]
+        \delta_{\,q_i,\,2} \\[4pt]
+        \delta_{\,q_i,\,3}
+      \end{pmatrix}
+    }_{\substack{\text{Region and}\\\text{Party Intercepts}}}
+    \;+\;
+    \underbrace{B\,\mathbf{X}_i}_{\substack{\text{Covariate}\\\text{Effects}}},
+    \;\Omega
+  \Bigr),
+  \label{eq:structural_mvn}
+\end{equation}
+where:
+\begin{itemize}
+  \item \(\alpha_{\,r,\,\ell}\) (\(\ell=1,2,3\)) are region‐level intercepts for latent dimensions \(\phi,\theta,\psi\).
+  \item \(\delta_{\,q,\,\ell}\) (\(\ell=1,2,3\)) are party‐level intercepts.
+  \item \(\mathbf{X}_i \in \mathbb{R}^{13}\) is the individual‐level covariate vector.
+  \item \(B \in \mathbb{R}^{3\times 13}\) has rows \(B_{1,\cdot}\) (effects on \(\phi\)), \(B_{2,\cdot}\) (on \(\theta\)), \(B_{3,\cdot}\) (on \(\psi\)).
+  \item \(\Omega \in \mathbb{R}^{3\times 3}\) is the residual covariance matrix, constrained to be a correlation matrix (unit variances).
+\end{itemize}
+
+\subsubsection{Non‐Centered Parameterizations}
+
+\paragraph{Latent residuals:} Let \(\eta^{\text{raw}}_i \sim \mathcal{N}_3(\mathbf{0},\,I_3)\).  Then
+\[
+  \boldsymbol{\eta}_i
+  = L_{\eta}\,\eta^{\text{raw}}_i,
+  \quad
+  L_{\eta}L_{\eta}^\top = \Omega,
+  \quad
+  L_{\eta} \sim \text{LKJ\_Cholesky}(3).
+\]
+
+\paragraph{Region intercepts:} For each region \(r=1,\dots,10\),
+\[
+  \alpha^{\text{raw}}_r \sim \mathcal{N}_3(\mathbf{0},\,I_3), 
+  \quad
+  \boldsymbol{\alpha}_r 
+  = D_{\alpha}\,L_{\alpha}\,\alpha^{\text{raw}}_r,
+\]
+where
+\[
+  D_{\alpha} = \text{diag}\bigl(\sigma_{\alpha,1},\,\sigma_{\alpha,2},\,\sigma_{\alpha,3}\bigr),
+  \quad
+  \sigma_{\alpha,\ell} \sim \text{Cauchy}_{+}(0,\,2.5),
+\]
+and \(L_{\alpha}\sim\text{LKJ\_Cholesky}(3)\).  Hence \(\boldsymbol{\alpha}_r \sim \mathcal{N}_3(\mathbf{0},\,\Sigma_{\alpha})\) with \(\Sigma_{\alpha} = D_{\alpha} L_{\alpha}L_{\alpha}^\top D_{\alpha}.\)
+
+\paragraph{Party intercepts:} For each party \(q=1,\dots,Q\),
+\[
+  \delta^{\text{raw}}_q \sim \mathcal{N}_3(\mathbf{0},\,I_3), 
+  \quad
+  \boldsymbol{\delta}_q 
+  = D_{\delta}\,L_{\delta}\,\delta^{\text{raw}}_q,
+\]
+where
+\[
+  D_{\delta} = \text{diag}\bigl(\sigma_{\delta,1},\,\sigma_{\delta,2},\,\sigma_{\delta,3}\bigr),
+  \quad
+  \sigma_{\delta,\ell} \sim \text{Cauchy}_{+}(0,\,2.5),
+  \quad
+  L_{\delta} \sim \text{LKJ\_Cholesky}(3).
+\]
+Thus \(\boldsymbol{\delta}_q\sim\mathcal{N}_3(\mathbf{0},\,\Sigma_{\delta})\).
+
+\subsubsection{Priors on Covariate Slopes}
+
+Vectorize \(B\in\mathbb{R}^{3\times 13}\).  For each latent index \(\ell=1,2,3\) and covariate index \(p=1,\dots,13\),
+\[
+  \beta^{(\ell)}_{p} 
+  \;\sim\; \mathcal{N}(0,\,1).
+\]
+Hence row 1 of \(B\) contains \(\{\beta^{(\phi)}_p\}\), row 2 contains \(\{\beta^{(\theta)}_p\}\), row 3 contains \(\{\beta^{(\psi)}_p\}\).
+
+\subsubsection{Residual Covariance Prior}
+
+\[
+  L_{\eta} \sim \text{LKJ\_Cholesky}(3), 
+  \quad
+  \eta^{\text{raw}}_i \sim \mathcal{N}_3(\mathbf{0},\,I_3),
+  \quad i=1,\dots,N.
+\]
+Consequently, \(\Omega = L_{\eta}L_{\eta}^\top\) is a correlation matrix with three unit‐variance latent dimensions.
+
+\subsection{Identification Constraints}
+
+\begin{itemize}
+  \item \textbf{Scale:} We fix \(\mathrm{Var}(\phi_i) = \mathrm{Var}(\theta_i) = \mathrm{Var}(\psi_i) = 1\) by modeling \(\eta^{\text{raw}}_i \sim \mathcal{N}_3(0,I)\) and setting \(\boldsymbol{\eta}_i = L_{\eta}\,\eta^{\text{raw}}_i\).
+  \item \textbf{Location:} Each \(\alpha_r\) and \(\delta_q\) has prior mean \(\mathbf{0}\).  Covariates in \(\mathbf{X}\) are mean‐zero (continuous columns standardized; dummies with reference = 0).  Thus \(E[\phi_i]=E[\theta_i]=E[\psi_i]=0\).
+  \item \textbf{Sign:} All loadings \(\{\lambda^{(\text{opt})}_j,\lambda^{(\text{env})}_k,\lambda^{(\text{rad})}_\ell\}\) are strictly positive (via \(\mathrm{LogNormal}(0,1)\)), eliminating sign‐flips.
+  \item \textbf{Sufficiency of Indicators:} Each latent has at least 5 indicators (6 for \(\phi\), 5 for \(\theta\), 8 for \(\psi\)), ensuring a well‐posed covariance.
+  \item \textbf{Non‐Centered Parametrizations:} For \(\alpha_r\), \(\delta_q\), and \(\eta_i\), we use non‐centered forms to avoid funnel‐geometry issues.
+\end{itemize}
+
+\section{Parameter Interpretations}
+
+\subsection{Measurement Parameters}
+
+\begin{itemize}
+  \item \(\alpha^{(\text{opt})}_j\): Expected standardized score on optimism‐item \(j\) when \(\phi_i=0\).
+  \item \(\lambda^{(\text{opt})}_j\): Strength with which item \(j\) loads on \(\phi_i\).  Larger \(\lambda^{(\text{opt})}_j\) means item \(j\) is a stronger indicator of economic‐optimism.
+  \item \(\sigma^{(\text{opt})}_j\): Residual SD of optimism‐item \(j\) given \(\phi_i\).
+  \item \(\alpha^{(\text{env})}_k\), \(\lambda^{(\text{env})}_k\), \(\sigma^{(\text{env})}_k\): Analogous interpretations for environmental‐priority items.
+  \item \(\alpha^{(\text{rad})}_\ell\): Expected standardized score on radical‐reform item \(\ell\) when \(\psi_i=0\).
+  \item \(\lambda^{(\text{rad})}_\ell\): Loading of item \(\ell\) on \(\psi_i\).  Larger values indicate more informative radical‐reform indicators.
+  \item \(\sigma^{(\text{rad})}_\ell\): Residual SD of radical‐reform item \(\ell\) given \(\psi_i\).
+\end{itemize}
+
+\subsection{Latent Variables}
+
+\begin{itemize}
+  \item \(\phi_i\): Respondent \(i\)’s latent economic‐optimism.
+  \item \(\theta_i\): Respondent \(i\)’s latent environmental‐priority.
+  \item \(\psi_i\): Respondent \(i\)’s latent radical‐reform orientation (higher \(\psi_i\) indicates stronger preference for radical change over status quo).
+\end{itemize}
+
+\subsection{Group‐Level Intercepts}
+
+\begin{itemize}
+  \item \(\boldsymbol{\alpha}_r = (\alpha_{r,1},\,\alpha_{r,2},\,\alpha_{r,3})^\top\) locates region \(r\) in the 3D latent space.  
+    \begin{itemize}
+      \item \(\alpha_{r,1}>0 \Rightarrow\) Region \(r\) above average on economic‐optimism.
+      \item \(\alpha_{r,2}>0 \Rightarrow\) Region \(r\) above average on environmental‐priority.
+      \item \(\alpha_{r,3}>0 \Rightarrow\) Region \(r\) above average on radical‐reform orientation.
+    \end{itemize}
+  \item \(\boldsymbol{\delta}_q = (\delta_{q,1},\,\delta_{q,2},\,\delta_{q,3})^\top\) locates party \(q\) similarly.
+\end{itemize}
+
+\subsection{Covariate Effects}
+
+Let \(B = [\,\beta^{(\ell)}_p\,]_{\ell=1:3,\;p=1:13}\).
+
+\begin{itemize}
+  \item \(\beta^{(\phi)}_{p}\) (row 1): Effect of covariate \(p\) on \(\phi_i\).  
+  \item \(\beta^{(\theta)}_{p}\) (row 2): Effect of covariate \(p\) on \(\theta_i\).  
+  \item \(\beta^{(\psi)}_{p}\) (row 3): Effect of covariate \(p\) on \(\psi_i\).  
+  \item In particular, \(\beta^{(\phi)}_{\text{gen}}\) and \(\beta^{(\theta)}_{\text{gen}}\) and \(\beta^{(\psi)}_{\text{gen}}\) measure Female vs Male differences on each latent.  Likewise for each age‐dummy, education dummy, and the continuous material‐insecurity index.
+\end{itemize}
+
+\subsection{Residual Covariance}
+
+\(\Omega\) is a \(3\times 3\) correlation matrix:
+\[
+  \Omega 
+  = 
+  \begin{pmatrix}
+    1 & \rho_{\phi\theta} & \rho_{\phi\psi}\\
+    \rho_{\phi\theta} & 1 & \rho_{\theta\psi}\\
+    \rho_{\phi\psi} & \rho_{\theta\psi} & 1
+  \end{pmatrix}.
+\]
+\begin{itemize}
+  \item \(\rho_{\phi\theta}\): Residual correlation between economic‐optimism and environmental‐priority, conditional on region, party, and covariates.
+  \item \(\rho_{\phi\psi}\): Residual correlation between economic‐optimism and radical‐reform orientation.
+  \item \(\rho_{\theta\psi}\): Residual correlation between environmental‐priority and radical‐reform orientation.
+\end{itemize}
+
+\section{Final Stan Model}
+
+\begin{verbatim}
+data {
+  int<lower=1> N;                // # of individuals
+  int<lower=1> P;                // # of numeric covariates
+  matrix[N, P] X;                // standardized covariates
+
+  int<lower=1> R;                           // # of regions
+  array[N] int<lower=1, upper=R> region_id; // region index
+
+  int<lower=1> Q;                          // # of parties
+  array[N] int<lower=1, upper=Q> party_id; // party index
+
+  int<lower=1> J_opt;                          // # of optimism items
+  int<lower=1> N_opt;                          // total optimism responses
+  array[N_opt] int<lower=1, upper=N>    i_opt;  // respondent index
+  array[N_opt] int<lower=1, upper=J_opt> j_opt; // item index
+  array[N_opt] real                     y_opt; // observed (standardized)
+
+  int<lower=1> J_env;                          // # of environment items
+  int<lower=1> N_env;                          // total environment responses
+  array[N_env] int<lower=1, upper=N>    i_env;  // respondent index
+  array[N_env] int<lower=1, upper=J_env> j_env; // item index
+  array[N_env] real                     y_env; // observed (standardized)
+
+  int<lower=1> J_rad;                          // # of radical-reform items
+  int<lower=1> N_rad;                          // total radical-reform responses
+  array[N_rad] int<lower=1, upper=N>    i_rad;  // respondent index
+  array[N_rad] int<lower=1, upper=J_rad> j_rad; // item index
+  array[N_rad] real                     y_rad; // observed (standardized)
+}
+
+parameters {
+  // A) Latent-factor hierarchy (3-dimensional now: φ, θ, ψ)
+  cholesky_factor_corr[3] Lcorr_eta;  // corr(φ, θ, ψ)
+  vector<lower=0>[3]      tau_eta;    // half-Normal(0, 0.3)
+  matrix[3, N]            z_eta;      // non-centered
+
+  // 2) Region intercepts (3-dimensional)
+  cholesky_factor_corr[3] Lcorr_alpha; // corr across (α₁, α₂, α₃)
+  matrix[3, R]            z_alpha;     // non-centered
+  vector<lower=0>[3]      sigma_alpha; // SD ≥ 0
+
+  // 3) Party intercepts (3-dimensional)
+  cholesky_factor_corr[3] Lcorr_delta; // corr across (δ₁, δ₂, δ₃)
+  matrix[3, Q]            z_delta;     // non-centered
+  vector<lower=0>[3]      sigma_delta; // SD ≥ 0
+
+  // 4) Covariate slopes (3 × P)
+  matrix[3, P]            B; // Normal(0, 0.5)
+
+  // B) Measurement: optimism items
+  vector[J_opt]           beta_opt;    // intercepts
+  vector<lower=0>[J_opt]  lambda_opt;  // loadings ≥ 0
+  vector<lower=0>[J_opt]  sigma_opt;   // residual SD ≥ 0
+
+  // C) Measurement: environment items
+  vector[J_env]           beta_env;    // intercepts
+  vector<lower=0>[J_env]  lambda_env;  // loadings ≥ 0
+  vector<lower=0>[J_env]  sigma_env;   // residual SD ≥ 0
+
+  // D) Measurement: radical-reform items
+  vector[J_rad]           beta_rad;    // intercepts
+  vector<lower=0>[J_rad]  lambda_rad;  // loadings ≥ 0
+  vector<lower=0>[J_rad]  sigma_rad;   // residual SD ≥ 0
+}
+
+transformed parameters {
+  // Expand region & party covariance matrices
+  cov_matrix[3] Sigma_alpha =
+    diag_pre_multiply(sigma_alpha, Lcorr_alpha)
+    * diag_pre_multiply(sigma_alpha, Lcorr_alpha)';
+  cov_matrix[3] Sigma_delta =
+    diag_pre_multiply(sigma_delta, Lcorr_delta)
+    * diag_pre_multiply(sigma_delta, Lcorr_delta)';
+
+  // Vectors for each latent dimension
+  vector[N] phi;
+  vector[N] theta;
+  vector[N] psi;
+
+  for (i in 1:N) {
+    // region + party intercept contributions (3-vector)
+    vector[3] mu_eta_i =
+      diag_pre_multiply(sigma_alpha, Lcorr_alpha) * z_alpha[, region_id[i]] +
+      diag_pre_multiply(sigma_delta, Lcorr_delta) * z_delta[, party_id[i]] +
+      B * to_vector(X[i]);
+
+    // latent noise (3-vector)
+    vector[3] noise =
+      diag_pre_multiply(tau_eta, Lcorr_eta) * z_eta[, i];
+
+    vector[3] eta_i = mu_eta_i + noise;
+    phi[i]   = eta_i[1];
+    theta[i] = eta_i[2];
+    psi[i]   = eta_i[3];
+  }
+}
+
+model {
+  // 1) Priors on τ_eta (latent SDs)
+  // Optimism (φ) and Environment (θ): existing tuned priors
+  tau_eta[1] ~ normal(0, 0.3);
+  tau_eta[2] ~ normal(0, 0.3);
+  
+  // Radical Reform (ψ): tighter prior
+  tau_eta[3] ~ normal(0, 0.1);  
+
+  Lcorr_eta        ~ lkj_corr_cholesky(2.0);
+  to_vector(z_eta) ~ normal(0, 1);
+
+  // 2) Region intercept priors
+  Lcorr_alpha      ~ lkj_corr_cholesky(2.0);
+  sigma_alpha      ~ normal(0, 0.1) T[0, ];
+  to_vector(z_alpha) ~ normal(0, 1);
+
+  // 3) Party intercept priors
+  Lcorr_delta      ~ lkj_corr_cholesky(2.0);
+  sigma_delta      ~ normal(0, 0.1) T[0, ];
+  to_vector(z_delta) ~ normal(0, 1);
+
+  // 4) Covariate slopes
+  to_vector(B)     ~ normal(0, 0.5);
+
+  // 5) Measurement: optimism
+  beta_opt        ~ normal(0, 0.5);
+  lambda_opt      ~ lognormal(log(1), 0.2);
+  sigma_opt       ~ normal(1, 0.2);
+
+  // 6) Measurement: environment
+  beta_env        ~ normal(0, 0.5);
+  lambda_env      ~ lognormal(log(1), 0.2);
+  sigma_env       ~ normal(1, 0.2);
+
+  // 7) Measurement: radical-reform
+  beta_rad        ~ normal(0, 0.5);
+  lambda_rad      ~ lognormal(log(1), 0.2);
+  sigma_rad       ~ normal(1, 0.2);
+
+  // 8) Likelihood: y_opt
+  for (n in 1:N_opt) {
+    int ii = i_opt[n];
+    int jj = j_opt[n];
+    real mu_opt = beta_opt[jj] + lambda_opt[jj] * phi[ii];
+    y_opt[n] ~ normal(mu_opt, sigma_opt[jj]);
+  }
+
+  // 9) Likelihood: y_env
+  for (n in 1:N_env) {
+    int ii = i_env[n];
+    int jj = j_env[n];
+    real mu_env = beta_env[jj] + lambda_env[jj] * theta[ii];
+    y_env[n] ~ normal(mu_env, sigma_env[jj]);
+  }
+
+  // 10) Likelihood: y_rad
+  for (n in 1:N_rad) {
+    int ii = i_rad[n];
+    int jj = j_rad[n];
+    real mu_rad = beta_rad[jj] + lambda_rad[jj] * psi[ii];
+    y_rad[n] ~ normal(mu_rad, sigma_rad[jj]);
+  }
+}
+
+generated quantities {
+  // A) Posterior-predictive y's for each block
+  vector[N_opt] y_opt_sim;
+  for (n in 1:N_opt) {
+    int ii = i_opt[n];
+    int jj = j_opt[n];
+    real mu_opt = beta_opt[jj] + lambda_opt[jj] * phi[ii];
+    y_opt_sim[n] = normal_rng(mu_opt, sigma_opt[jj]);
+  }
+
+  vector[N_env] y_env_sim;
+  for (n in 1:N_env) {
+    int ii = i_env[n];
+    int jj = j_env[n];
+    real mu_env = beta_env[jj] + lambda_env[jj] * theta[ii];
+    y_env_sim[n] = normal_rng(mu_env, sigma_env[jj]);
+  }
+
+  vector[N_rad] y_rad_sim;
+  for (n in 1:N_rad) {
+    int ii = i_rad[n];
+    int jj = j_rad[n];
+    real mu_rad = beta_rad[jj] + lambda_rad[jj] * psi[ii];
+    y_rad_sim[n] = normal_rng(mu_rad, sigma_rad[jj]);
+  }
+
+  // B) R² computations for each latent block
+  // 1) R²_opt
+  vector[N_opt] yhat_opt_resp;       
+  vector[N_opt] var_resid_opt_resp;  
+
+  for (n in 1:N_opt) {
+    int ii = i_opt[n];
+    int jj = j_opt[n];
+    real mu_opt_n = beta_opt[jj] + lambda_opt[jj] * phi[ii];
+    yhat_opt_resp[n]      = mu_opt_n;
+    var_resid_opt_resp[n] = square(sigma_opt[jj]);
+  }
+
+  real Var_pred_opt = variance(yhat_opt_resp);
+  real E_resid_opt  = mean(var_resid_opt_resp);
+  real R2_opt       = Var_pred_opt / (Var_pred_opt + E_resid_opt);
+
+  // 2) R²_env
+  vector[N_env] yhat_env_resp;
+  vector[N_env] var_resid_env_resp;
+
+  for (n in 1:N_env) {
+    int ii = i_env[n];
+    int jj = j_env[n];
+    real mu_env_n = beta_env[jj] + lambda_env[jj] * theta[ii];
+    yhat_env_resp[n]      = mu_env_n;
+    var_resid_env_resp[n] = square(sigma_env[jj]);
+  }
+
+  real Var_pred_env = variance(yhat_env_resp);
+  real E_resid_env  = mean(var_resid_env_resp);
+  real R2_env       = Var_pred_env / (Var_pred_env + E_resid_env);
+
+  // 3) R²_rad
+  vector[N_rad] yhat_rad_resp;
+  vector[N_rad] var_resid_rad_resp;
+
+  for (n in 1:N_rad) {
+    int ii = i_rad[n];
+    int jj = j_rad[n];
+    real mu_rad_n = beta_rad[jj] + lambda_rad[jj] * psi[ii];
+    yhat_rad_resp[n]      = mu_rad_n;
+    var_resid_rad_resp[n] = square(sigma_rad[jj]);
+  }
+
+  real Var_pred_rad = variance(yhat_rad_resp);
+  real E_resid_rad  = mean(var_resid_rad_resp);
+  real R2_rad       = Var_pred_rad / (Var_pred_rad + E_resid_rad);
+}
+\end{verbatim}
+
+\end{document}

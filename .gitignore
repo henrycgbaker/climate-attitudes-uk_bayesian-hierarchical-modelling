@@ -1,0 +1,58 @@
+# R
+.Rhistory
+.Rdata
+.RData
+.Ruserdata
+.httr-oauth
+*.Rproj.user/
+renv/library/
+renv/local/
+renv/staging/
+renv/python/
+renv/sandbox/
+
+# Stan
+*.stan.hpp
+*.o
+*.exe
+
+# Model outputs (large files)
+outputs/model/*.rds
+outputs/model/*.csv
+
+# LaTeX build artifacts
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.run.xml
+*.synctex.gz
+*.toc
+*.lof
+*.lot
+*.nav
+*.snm
+*.vrb
+*.dvi
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets and proprietary data
+.env
+*.xlsx
+data/LfG*.xlsx
+
+# IDE
+.idea/
+.vscode/
+*.Rproj
+
+# Temporary files
+*~
+\#*\#

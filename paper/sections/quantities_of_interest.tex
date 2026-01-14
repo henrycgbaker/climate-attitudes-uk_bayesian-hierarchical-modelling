@@ -1,0 +1,536 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage[top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{multirow,booktabs,graphicx,enumerate,float,fancyhdr,amsmath,amssymb,tcolorbox,xcolor,array,makecell}
+\setlength{\parindent}{0in}
+\setlength{\parskip}{1em}
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\footnotesize Bayesian Modelling - Research Note}
+\rhead{\footnotesize Henry Baker}
+\cfoot{\footnotesize \thepage}
+\newtcolorbox{redbox}{colback=red!10!white,colframe=red!80!black,fonttitle=\bfseries,title=NB!,sharp corners}
+\begin{document}
+
+\thispagestyle{empty}
+\begin{tabular}{p{15.5cm}}
+{\large \bf Bayesian Modelling\\
+\hline}
+\end{tabular}
+
+\begin{center}
+{\Large \bf Research Note}\\
+3 - Quantities of Interest\\
+Henry Baker (228755)\\
+\end{center}
+
+\subsection{1. Empirical Estimand Mapping}
+Let $\boldsymbol{\Theta}$ denote the full parameter vector of our hierarchical latent‐regression model. With respondent \(i\)’s latent:
+\begin{itemize}
+    \item \textbf{Environmentalism} trait denoted by $\theta_i$,
+    \item \textbf{Economic‐optimism} trait denoted by $\phi_i$,
+    \item \textbf{Radical‐reform} trait denoted by $\zeta_i$.
+\end{itemize}
+
+Specifically:
+
+\begin{align*}
+\boldsymbol{\Theta} = \bigl\{\;
+& \beta^{(\mathrm{opt})}_j,\;\lambda^{(\mathrm{opt})}_j,\;\sigma^{(\mathrm{opt})}_j, \\
+& \beta^{(\mathrm{env})}_k,\;\lambda^{(\mathrm{env})}_k,\;\sigma^{(\mathrm{env})}_k, \\
+& \beta^{(\mathrm{rad})}_\ell,\;\lambda^{(\mathrm{rad})}_\ell,\;\sigma^{(\mathrm{rad})}_\ell, \\[0.5ex]
+& \sigma_{\alpha,1},\;\sigma_{\alpha,2},\;\sigma_{\alpha,3}, \\
+& \rho_{\alpha,12},\;\rho_{\alpha,13},\;\rho_{\alpha,23}, \\[0.5ex]
+& \sigma_{\delta,1},\;\sigma_{\delta,2},\;\sigma_{\delta,3}, \\
+& \rho_{\delta,12},\;\rho_{\delta,13},\;\rho_{\delta,23}, \\[0.5ex]
+& B,\;\ldots\;
+\bigr\}.
+\end{align*}
+
+
+
+Here:
+\begin{itemize}
+  \item $\{\beta^{(\mathrm{opt})}_j,\lambda^{(\mathrm{opt})}_j,\sigma^{(\mathrm{opt})}_j\}$ are the intercepts, loadings, and residual variances for the \emph{Optimism} measurement items $j=1,\dots,J_{\mathrm{opt}}$.
+  \item $\{\beta^{(\mathrm{env})}_k,\lambda^{(\mathrm{env})}_k,\sigma^{(\mathrm{env})}_k\}$ are the corresponding quantities for the \emph{Environmental Priority} items $k=1,\dots,J_{\mathrm{env}}$.
+  \item $\{\beta^{(\mathrm{rad})}_\ell,\lambda^{(\mathrm{rad})}_\ell,\sigma^{(\mathrm{rad})}_\ell\}$ are the intercepts, loadings, and residual variances for the \emph{Radical‐Reform} items $\ell=1,\dots,J_{\mathrm{rad}}$.
+  \item $(\sigma_{\alpha,1},\sigma_{\alpha,2},\sigma_{\alpha,3})$ and $(\sigma_{\delta,1},\sigma_{\delta,2},\sigma_{\delta,3})$ are the standard deviations of the group‐level intercepts for regions ($r=1,\dots,R$) and parties ($q=1,\dots,Q$), respectively, in each of the three latent dimensions.
+  \item $\{\rho_{\alpha,12},\rho_{\alpha,13},\rho_{\alpha,23}\}$ are the correlations among the region‐level intercepts for $(\phi,\theta,\zeta)$, and similarly $\{\rho_{\delta,12},\rho_{\delta,13},\rho_{\delta,23}\}$ for party‐level intercepts.
+  \item $B$ denotes the collection of all regression slope coefficients $\beta^{(\phi)}_p, \beta^{(\theta)}_p, \beta^{(\zeta)}_p$ for individual-level covariates $p=1,\dots,P$.
+  \item The residual covariance among the latent traits in the individual‐level measurement (after accounting for covariates and group intercepts) is captured by a $3\times3$ correlation matrix $\mathbf{R}$ with off‐diagonals $\{\rho_{\phi\theta},\rho_{\phi\zeta},\rho_{\theta\zeta}\}$.
+\end{itemize}
+
+Our theoretical targets include:
+\begin{itemize}
+  \item \textbf{Posterior distributions of all slope coefficients} 
+    $$\beta^{(\phi)}_p, \beta^{(\theta)}_p, \beta^{(\zeta)}_p$$
+    evaluating how each individual level demographic predictor $x_p$ influences each of the three latent traits ($\phi_i,\theta_i,\zeta_i$).
+  \item \textbf{Population‐average predictions} for each latent trait, and for any downstream policy or behavioral outcomes defined as functions of $(\phi,\theta,\zeta)$ (e.g.\ probability of supporting a particular climate policy given latent scores).  
+  \item \textbf{Bayesian $R^2$}: for each of the three latent dimensions ($\phi,\theta,\zeta$), both marginal (covariate‐only) and conditional (including group‐level variance) $R^2$ summarizing explained variance.
+  \item \textbf{Posterior distributions of group intercepts} 
+    \[
+      \{\,\alpha_{r,1},\alpha_{r,2},\alpha_{r,3}\}_{r=1}^R
+      \quad\text{and}\quad
+      \{\,\delta_{q,1},\delta_{q,2},\delta_{q,3}\}_{q=1}^Q,
+    \]
+    interpreted as “region portraits” and “party portraits” in $(\phi,\theta,\zeta)$ space.
+  \item \textbf{Reliability (McDonald’s $\omega$)} for each factor: \emph{Optimism}, \emph{Environment}, and \emph{Radical‐Reform}, based on their respective factor‐analytic measurement submodels.
+  \item \textbf{Residual correlations} among the three latent traits after accounting for covariates and group‐level intercepts:
+    \[
+      \rho_{\phi\theta},\quad \rho_{\phi\zeta},\quad \rho_{\theta\zeta}.
+    \]
+  \item \textbf{Communalities and uniquenesses} for each measurement item in all three scales, to assess how well each item is explained by its latent factor.
+  \item \textbf{Posterior latent‐trait scores (posterior means)} for each respondent:
+    \[
+      \bigl\{\hat{\phi}_i,\;\hat{\theta}_i,\;\hat{\zeta}_i\bigr\}_{i=1}^N,
+    \]
+    for use in downstream analyses or segmentation.
+\end{itemize}
+
+\subsection{2. Population‐Average Predictions (Marginal Effects)}
+Given posterior draws $\{\theta^{(s)}\}_{s=1}^S$, we now have three latent‐score regression submodels.  For respondent $i$ at draw $s$:
+\[
+  \eta_i^{(\mathrm{opt})}\bigl(\theta^{(s)}\bigr) 
+  = \beta^{(\mathrm{opt}),(s)}_{j_{i,\mathrm{opt}}} 
+    \;+\;\lambda^{(\mathrm{opt}),(s)}_{j_{i,\mathrm{opt}}}\,\phi_i^{(s)},
+  \quad
+  \eta_i^{(\mathrm{env})}\bigl(\theta^{(s)}\bigr) 
+  = \beta^{(\mathrm{env}),(s)}_{j_{i,\mathrm{env}}} 
+    \;+\;\lambda^{(\mathrm{env}),(s)}_{j_{i,\mathrm{env}}}\,\theta_i^{(s)},
+\]
+\[
+  \eta_i^{(\mathrm{rad})}\bigl(\theta^{(s)}\bigr) 
+  = \beta^{(\mathrm{rad}),(s)}_{j_{i,\mathrm{rad}}} 
+    \;+\;\lambda^{(\mathrm{rad}),(s)}_{j_{i,\mathrm{rad}}}\,\zeta_i^{(s)}.
+\]
+If a downstream policy outcome $y_i^{\mathrm{pred}}$ depends jointly on all three latent traits (for example, 
+\[
+  y_i^{\mathrm{pred}}\bigl(\theta^{(s)}\bigr) 
+  = \mathrm{Bernoulli}\bigl(\mathrm{logit}^{-1}(w_{\phi}\,\phi_i^{(s)} + w_{\theta}\,\theta_i^{(s)} + w_{\zeta}\,\zeta_i^{(s)})\bigr)
+\]
+for some weights $w_{\phi},w_{\theta},w_{\zeta}$), one can simulate $y_i^{\mathrm{pred}}$ accordingly.  Otherwise, for each latent dimension $\ell\in\{\mathrm{opt},\mathrm{env},\mathrm{rad}\}$:
+\[
+  \bar{\eta}^{(\ell),(s)} 
+  = \frac{1}{N} \sum_{i=1}^N \eta_i^{(\ell)}\bigl(\theta^{(s)}\bigr).
+\]
+Summarize $\{\bar{\eta}^{(\ell),(s)}\}_{s=1}^S$ by posterior mean and 95\% credible interval to obtain the population‐average latent score on $\ell$.
+
+\begin{itemize}
+  \item \emph{Observed‐case averaging (no artificial covariate fixation):}  
+    For each draw $s$, compute $\eta_i^{(\ell)}(\theta^{(s)})$ at the actual covariate profile $(\mathrm{gender}_i,\,\mathrm{age}_i,\,\mathrm{edu}_i,\,\mathrm{insec}_i)$, then average over $i=1,\dots,N$.  
+  \item \emph{Subgroup conditioning:}  
+    For a subgroup defined by any covariate (e.g.\ “age 18–24”), restrict to $i$ with $\mathrm{age}_i=18$–24 and compute 
+    \[
+      \bar{\eta}^{(\ell),(s)}_{\text{age 18–24}} 
+      = \frac{1}{N_{18-24}} \sum_{i:\mathrm{age}_i=18-24} \eta_i^{(\ell)}\bigl(\theta^{(s)}\bigr).
+    \]
+  \item \emph{Monte Carlo algorithm:}  
+    \begin{enumerate}
+      \item For $s=1,\dots,S$:
+        \begin{enumerate}
+          \item Extract $\phi_i^{(s)}, \theta_i^{(s)}, \zeta_i^{(s)}$ for $i=1,\dots,N$.
+          \item Compute $\eta_i^{(\mathrm{opt}),(s)},\,\eta_i^{(\mathrm{env}),(s)},\,\eta_i^{(\mathrm{rad}),(s)}$.
+          \item Average across $i$ to obtain $\bar{\eta}^{(\ell),(s)}$ for each $\ell$.
+        \end{enumerate}
+      \item Summarize $\{\bar{\eta}^{(\ell),(s)}\}$ to form $\widehat{E}[\bar{\eta}^{(\ell)} \mid y]$ and $\mathrm{CI}_{0.95}(\bar{\eta}^{(\ell)})$, for each latent dimension $\ell$.
+    \end{enumerate}
+\end{itemize}
+
+\subsection{3. Average Marginal Effects}
+For a continuous covariate $x_{p}$ (e.g.\ standardized insecurity), the average marginal effect on latent trait $\phi$ (Optimism) is:
+\[
+  \mathrm{AME}_{p}^{(\phi),(s)} 
+  = \frac{1}{N} \sum_{i=1}^N \frac{\partial}{\partial x_{ip}}\, 
+    E\bigl[\phi_i \,\bigm|\,(x_{i1},\dots,x_{iP}),\,\theta^{(s)}\bigr].
+\]
+In our linear latent‐regression submodels,
+\[
+  \phi_i 
+  = \alpha_{r[i],1} + \delta_{q[i],1} 
+    + \sum_{p'=1}^P\beta^{(\phi)}_{p'}\,x_{ip'} + \varepsilon_{i,1},
+\]
+\[
+  \theta_i 
+  = \alpha_{r[i],2} + \delta_{q[i],2} 
+    + \sum_{p'=1}^P\beta^{(\theta)}_{p'}\,x_{ip'} + \varepsilon_{i,2},
+\]
+\[
+  \zeta_i 
+  = \alpha_{r[i],3} + \delta_{q[i],3} 
+    + \sum_{p'=1}^P\beta^{(\mathrm{rad})}_{p'}\,x_{ip'} + \varepsilon_{i,3}.
+\]
+Hence,
+\[
+  \frac{\partial}{\partial x_{ip}} E\bigl[\phi_i \mid \theta^{(s)}\bigr] 
+    =\beta_{p}^{(\phi),(s)}, 
+  \quad
+  \frac{\partial}{\partial x_{ip}} E\bigl[\theta_i \mid \theta^{(s)}\bigr] 
+    =\beta_{p}^{(\theta),(s)}, 
+  \quad
+  \frac{\partial}{\partial x_{ip}} E\bigl[\zeta_i \mid \theta^{(s)}\bigr] 
+    =\beta_{p}^{(\mathrm{rad}),(s)}.
+\]
+Thus,
+\[
+  \mathrm{AME}_{p}^{(\phi),(s)} 
+    =\beta_{p}^{(\phi),(s)}, 
+  \quad
+  \mathrm{AME}_{p}^{(\theta),(s)} 
+    =\beta_{p}^{(\theta),(s)}, 
+  \quad
+  \mathrm{AME}_{p}^{(\zeta),(s)} 
+    =\beta_{p}^{(\mathrm{rad}),(s)}.
+\]
+Summarize $\{\beta_{p}^{(\phi),(s)}\}$, $\{\beta_{p}^{(\theta),(s)}\}$, and $\{\beta_{p}^{(\mathrm{rad}),(s)}\}$ by posterior mean and 95\% credible interval.  For categorical dummies (e.g.\ age brackets), the marginal effect is the difference between category and reference, which reduces to the coefficient itself if coded 0/1.
+
+\subsection{4. Bayesian Coefficient of Determination $R^2$}
+Following Gelman, Goodrich, Gabry, and Vehtari (2019), for each draw $s$ define the predicted latent scores:
+\[
+  \hat{\phi}_i^{(s)} = E\bigl[\phi_i \mid x_i, \theta^{(s)}\bigr]
+    = \alpha^{(s)}_{r[i],1} + \delta^{(s)}_{q[i],1} + \sum_{p=1}^P\beta_{p}^{(\phi),(s)}\,x_{ip},
+\]
+\[
+  \hat{\theta}_i^{(s)} = E\bigl[\theta_i \mid x_i, \theta^{(s)}\bigr]
+    = \alpha^{(s)}_{r[i],2} + \delta^{(s)}_{q[i],2} + \sum_{p=1}^P\beta_{p}^{(\theta),(s)}\,x_{ip},
+\]
+\[
+  \hat{\zeta}_i^{(s)} = E\bigl[\zeta_i \mid x_i, \theta^{(s)}\bigr]
+    = \alpha^{(s)}_{r[i],3} + \delta^{(s)}_{q[i],3} + \sum_{p=1}^P\beta_{p}^{(\mathrm{rad}),(s)}\,x_{ip}.
+\]
+Then the \emph{marginal} $R^2$ for $\phi$ at draw $s$ is:
+\[
+  R^2_{\mathrm{marg},\phi}^{(s)} 
+  = \frac{\mathrm{Var}_{i}\bigl(\hat{\phi}_i^{(s)}\bigr)}
+         {\mathrm{Var}_{i}\bigl(\hat{\phi}_i^{(s)}\bigr) + \mathrm{Var}(\phi_i^{(s)} - \hat{\phi}_i^{(s)})},
+  \quad \mathrm{Var}(\phi_i^{(s)} - \hat{\phi}_i^{(s)}) = 1,
+\]
+and similarly define $R^2_{\mathrm{marg},\theta}^{(s)}$ and $R^2_{\mathrm{marg},\zeta}^{(s)}$.  Summarize $\{R^2_{\mathrm{marg},\ell}^{(s)}\}$ for $\ell\in\{\phi,\theta,\zeta\}$ by posterior mean and 95\% credible interval.
+
+\begin{itemize}
+  \item \emph{Conditional $R^2$:}  Include group‐level variance.  For $\phi$,
+    \[
+      \mathrm{Var}^{(s)}_{\mathrm{rand},\phi} = \sigma_{\alpha,1}^{(s)2} + \sigma_{\delta,1}^{(s)2}, 
+      \quad
+      \mathrm{Var}^{(s)}_{\mathrm{res},\phi} = 1,
+    \]
+    hence
+    \[
+      R^2_{\mathrm{cond},\phi}^{(s)} 
+        = \frac{\mathrm{Var}_i\bigl(\hat{\phi}_i^{(s)}\bigr) + \mathrm{Var}^{(s)}_{\mathrm{rand},\phi}}
+               {\mathrm{Var}_i\bigl(\hat{\phi}_i^{(s)}\bigr) 
+                + \mathrm{Var}^{(s)}_{\mathrm{rand},\phi} 
+                + \mathrm{Var}^{(s)}_{\mathrm{res},\phi}}.
+    \]
+    Analogously for $\theta$ and $\zeta$:
+    \[
+      \mathrm{Var}^{(s)}_{\mathrm{rand},\theta} = \sigma_{\alpha,2}^{(s)2} + \sigma_{\delta,2}^{(s)2}, 
+      \quad
+      \mathrm{Var}^{(s)}_{\mathrm{res},\theta} = 1,
+    \]
+    \[
+      \mathrm{Var}^{(s)}_{\mathrm{rand},\zeta} = \sigma_{\alpha,3}^{(s)2} + \sigma_{\delta,3}^{(s)2}, 
+      \quad
+      \mathrm{Var}^{(s)}_{\mathrm{res},\zeta} = 1.
+    \]
+\end{itemize}
+
+\subsection{5. Measurement‐Model Specific Quantities}
+\begin{itemize}
+  \item \textbf{McDonald’s $\omega$ (Composite Reliability):}  
+    For each factor and draw $s$, define:
+    \[
+      \omega^{(\mathrm{opt}),(s)} 
+      = \frac{\bigl(\sum_{j=1}^{J_{\mathrm{opt}}} \lambda^{(\mathrm{opt}),(s)}_j \bigr)^2}
+             {\bigl(\sum_{j=1}^{J_{\mathrm{opt}}} \lambda^{(\mathrm{opt}),(s)}_j \bigr)^2
+               + \sum_{j=1}^{J_{\mathrm{opt}}} \sigma^{(\mathrm{opt}),(s)2}_j},
+    \]
+    \[
+      \omega^{(\mathrm{env}),(s)} 
+      = \frac{\bigl(\sum_{k=1}^{J_{\mathrm{env}}} \lambda^{(\mathrm{env}),(s)}_k \bigr)^2}
+             {\bigl(\sum_{k=1}^{J_{\mathrm{env}}} \lambda^{(\mathrm{env}),(s)}_k \bigr)^2
+               + \sum_{k=1}^{J_{\mathrm{env}}} \sigma^{(\mathrm{env}),(s)2}_k},
+    \]
+    \[
+      \omega^{(\mathrm{rad}),(s)} 
+      = \frac{\bigl(\sum_{\ell=1}^{J_{\mathrm{rad}}} \lambda^{(\mathrm{rad}),(s)}_\ell \bigr)^2}
+             {\bigl(\sum_{\ell=1}^{J_{\mathrm{rad}}} \lambda^{(\mathrm{rad}),(s)}_\ell \bigr)^2
+               + \sum_{\ell=1}^{J_{\mathrm{rad}}} \sigma^{(\mathrm{rad}),(s)2}_\ell}.
+    \]
+    Summaries of $\{\omega^{(\mathrm{opt}),(s)}\}$, $\{\omega^{(\mathrm{env}),(s)}\}$, and $\{\omega^{(\mathrm{rad}),(s)}\}$ give the factor reliabilities.
+
+  \item \textbf{Latent trait scores (posterior means):}  
+    After sampling, compute
+    \[
+      \hat{\phi}_i = \frac{1}{S} \sum_{s=1}^S \phi_i^{(s)}, 
+      \quad
+      \hat{\theta}_i = \frac{1}{S} \sum_{s=1}^S \theta_i^{(s)}, 
+      \quad
+      \hat{\zeta}_i = \frac{1}{S} \sum_{s=1}^S \zeta_i^{(s)}.
+    \]
+    These posterior means can be used for downstream segmentation or as inputs to further analyses.
+
+  \item \textbf{Communality and uniqueness for each item:}  
+    For item $j$ in the Optimism scale, at draw $s$:
+    \[
+      \text{communality}^{(s)}_{j,\mathrm{opt}} 
+      = \bigl(\lambda^{(\mathrm{opt}),(s)}_j\bigr)^2,
+      \quad
+      \text{uniqueness}^{(s)}_{j,\mathrm{opt}} 
+      = \sigma^{(\mathrm{opt}),(s)2}_j.
+    \]
+    Proportion of variance explained by the factor is
+    \[
+      \frac{(\lambda_j^{(\mathrm{opt},s)})^2}{(\lambda_j^{(\mathrm{opt},s)})^2 + \sigma_j^{(\mathrm{opt},s)2}}.
+    \]
+    Repeat analogously for environment items $k$ and radical‐reform items $\ell$:
+    \[
+      \text{communality}^{(s)}_{k,\mathrm{env}} 
+      = \bigl(\lambda^{(\mathrm{env}),(s)}_k\bigr)^2,
+      \quad
+      \text{uniqueness}^{(s)}_{k,\mathrm{env}} 
+      = \sigma^{(\mathrm{env}),(s)2}_k,
+    \]
+    \[
+      \text{communality}^{(s)}_{\ell,\mathrm{rad}} 
+      = \bigl(\lambda^{(\mathrm{rad}),(s)}_\ell\bigr)^2,
+      \quad
+      \text{uniqueness}^{(s)}_{\ell,\mathrm{rad}} 
+      = \sigma^{(\mathrm{rad}),(s)2}_\ell.
+    \]
+\end{itemize}
+
+\subsection{7. Substantive Interpretation and Strategic Use of Quantities of Interest}
+This section describes how each Quantity of Interest (QoI) can be interpreted substantively and used by a strategic actor (e.g.\ a climate‐focused campaigner) to inform political messaging, targeting, and prioritization.  
+
+\subsubsection{7.1. Slope Coefficients ($\beta^{(\phi)}_p, \beta^{(\theta)}_p, \beta^{(\zeta)}_p$)}
+\begin{itemize}
+  \item \textbf{Interpretation:}  Each coefficient$\beta^{(\ell)}_{p}$ quantifies the average change in latent trait $\ell\in\{\phi,\theta,\zeta\}$ associated with a one‐unit (e.g.\ one standard deviation) increase in covariate $x_p$, holding other covariates constant.  
+  \item \textbf{Strategic use:}  
+    \begin{itemize}
+      \item Identify the \emph{most influential predictors} of \emph{Optimism} ($\phi$), \emph{Environmental Priority} ($\theta$), and \emph{Radical‐Reform} ($\zeta$).  For example, if \textit{political insecurity} has a large positive$\beta^{(\theta)}$, messaging that addresses economic concerns may effectively boost environmental engagement.  
+      \item Contrast$\beta^{(\phi)}_p$ vs. $\beta^{(\theta)}_p$ vs. $\beta^{(\mathrm{rad})}_p$ across covariates: some demographics (e.g.\ younger age) might strongly predict higher radical‐reform support but only weakly predict environmental priority.  This suggests distinct framing strategies: tailor radical‐reform appeals to youth, but emphasize climate risk when targeting older cohorts.  
+      \item Estimate credible intervals for each$\beta^{(\ell)}_p$ to gauge uncertainty: if an interval for$\beta^{(\mathrm{rad})}_p$ is wide, the evidence that covariate $p$ predicts radical‐reform is weak, cautioning against overreliance on that link.
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{7.2. Population‐Average Predictions ($\bar{\eta}^{(\ell)}$)}
+\begin{itemize}
+  \item \textbf{Interpretation:}  $\bar{\eta}^{(\ell)}$ is the expected average latent score on dimension $\ell$ across the entire population (or a specific subgroup).  For example, $\widehat{E}[\bar{\phi}\mid y]$ is the mean optimism score, while $\widehat{E}[\bar{\zeta}\mid y]$ is the mean radical‐reform score.  
+  \item \textbf{Strategic use:}  
+    \begin{itemize}
+      \item Compare $\bar{\theta}$ vs.\ $\bar{\zeta}$ across subgroups (e.g.\ by age, region, party).  If a particular region has high $\bar{\zeta}$ but moderate $\bar{\theta}$, climate‐focused messaging there could emphasize radical solutions (e.g.\ “Green New Deal”) to resonate with reform‐leaning audiences.  
+      \item Allocate resources: regions or demographic slices with low $\bar{\theta}$ but moderate $\bar{\phi}$ may benefit from “optimism‐framed” environmental messages (“solutions are possible!”), whereas those with high $\bar{\zeta}$ may respond to calls for structural change.
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{7.3. Average Marginal Effects ($\mathrm{AME}_p^{(\ell)}$)}
+\begin{itemize}
+  \item \textbf{Interpretation:}  $\mathrm{AME}_p^{(\ell)}$ is the average effect—across all respondents—of a small change in covariate $x_p$ on latent trait $\ell$.  For continuous $x_p$, it equals the coefficient$\beta^{(\ell)}_p$; for categorical $x_p$, it is the average difference between categories.  
+  \item \textbf{Strategic use:}  
+    \begin{itemize}
+      \item Quantify \emph{marginal gains} from shifting covariate distributions.  For example, if $\mathrm{AME}_{\text{education}}^{(\theta)}$ is large, educational interventions (e.g.\ informed messaging) may substantially raise environmental concern.  
+      \item Compare marginal effects across latent traits: if $\mathrm{AME}_{\text{age}}^{(\zeta)}$ is positive and large, messaging that appeals to youth may drive radical‐reform sentiment more than environmental priority, suggesting tailored youth‐oriented radical framing.  
+      \item Use subgroup‐specific marginal effects: compute $\mathrm{AME}_p^{(\ell)}$ within “women” or “urban” subsamples to understand differential responsiveness, informing microtargeting.  
+      \item Estimate uncertainty: if the 95\% CI for $\mathrm{AME}_p^{(\ell)}$ excludes zero, the effect is credibly nonzero.  Target campaigns on those high‐certainty channels.
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{7.4. Bayesian Coefficient of Determination ($R^2$)}
+\begin{itemize}
+  \item \textbf{Interpretation:}  
+    \begin{itemize}
+      \item \emph{Marginal} $R^2_{\mathrm{marg},\ell}$ measures the proportion of variance in latent trait $\ell$ explained by covariates alone.
+      \item \emph{Conditional} $R^2_{\mathrm{cond},\ell}$ includes both covariate effects and group‐level random effects (regions, parties).  
+    \end{itemize}
+  \item \textbf{Strategic use:}  
+    \begin{itemize}
+      \item If $R^2_{\mathrm{marg},\theta}$ is high (e.g.\ $>0.5$), demographic and attitudinal covariates explain a large fraction of environmental priority.  Campaigns can rely on known predictors (e.g.\ age, education) to segment audiences.
+      \item If $R^2_{\mathrm{cond},\theta} - R^2_{\mathrm{marg},\theta}$ is large, much variation is at the region/party level.  This suggests that localized or partisan messaging is crucial: one message may not fit all regions or parties.
+      \item Compare $R^2$ across dimensions: a low $R^2_{\mathrm{marg},\zeta}$ implies that radical‐reform sentiment is less predictable from observed covariates—grassroots engagement or novel outreach strategies may be required.
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{7.5. Group Intercepts (“Region” and “Party” Portraits)}
+\begin{itemize}
+  \item \textbf{Interpretation:}  
+    \[
+      (\alpha_{r,1},\alpha_{r,2},\alpha_{r,3}) 
+      \quad\text{and}\quad
+      (\delta_{q,1},\delta_{q,2},\delta_{q,3})
+    \]
+    represent, for region $r$ (or party $q$), the average deviation in latent traits $(\phi,\theta,\zeta)$ relative to a grand mean, after adjusting for covariates.  
+  \item \textbf{Strategic use:}  
+    \begin{itemize}
+      \item \emph{Region portraits:}  Plot each region $r$ in 3D $(\phi,\theta,\zeta)$ space.  Regions with high $\alpha_{r,2}$ (environment) but low $\alpha_{r,3}$ (radical‐reform) may respond to moderate “green‐growth” messaging, whereas regions with high $\alpha_{r,3}$ might favor more transformative climate narratives.  
+      \item \emph{Party portraits:}  Parties $q$ with high $\delta_{q,3}$ (radical‐reform) can be partners for advocacy of structural policies (e.g.\ carbon tax), while those with high $\delta_{q,1}$ (optimism) may be open to hopeful, solution‐oriented frames.  
+      \item Adjust resource allocation: invest in ground operations—town halls or canvassing—in regions where intercepts indicate high latent engagement.  
+    \end{itemize}
+\end{itemize}
+
+\begin{tcolorbox}
+    \textcolor{red}{MERGE THIS WITH 'GROUP LEVEL INTERCEPTS' SECTION ABOVE:}
+
+    \subsection{Audience Segmentation via Latent Scores}
+
+\begin{itemize}
+  \item \textbf{Posterior Means of Latent Variables (\(\phi_i,\theta_i,\psi_i\)):}  
+    After fitting the model, one obtains posterior draws of each respondent’s economic‐optimism (\(\phi_i\)), environmental‐priority (\(\theta_i\)), and radical‐reform orientation (\(\psi_i\)).  A climate NGO can compute—for each region \(r\) and party \(q\)—the posterior means
+    \[
+      \widehat{\alpha}_{r,\ell} = E\bigl[\alpha_{r,\ell}\mid\text{data}\bigr], 
+      \quad 
+      \widehat{\delta}_{q,\ell} = E\bigl[\delta_{q,\ell}\mid\text{data}\bigr],
+      \quad
+      \ell \in \{1,2,3\}.
+    \]
+    \begin{itemize}
+      \item \emph{Interpretation:}  
+        \(\widehat{\alpha}_{r,2}\) indicates how much more (or less) pro‐environment Region \(r\) is, relative to the national average (conditional on demographics).  Likewise, \(\widehat{\alpha}_{r,1}\) and \(\widehat{\alpha}_{r,3}\) indicate Region \(r\)’s relative economic‐optimism and radical‐reform leanings.  
+      \item \emph{Actionable Use:}  
+        Regions with high \(\widehat{\alpha}_{r,2}\) but low \(\widehat{\alpha}_{r,1}\) (strong environmental concern but weak economic optimism) may be most open to messaging that connects green policies to local economic benefits.  Conversely, regions with high \(\widehat{\alpha}_{r,1}\) and low \(\widehat{\alpha}_{r,2}\) might require communications that emphasize job creation in renewable sectors.  Regions with elevated \(\widehat{\alpha}_{r,3}\) (radical‐reform orientation) are likely receptive to bold, systemic‐change appeals (e.g.\ advocating for a Green New Deal), whereas those with low \(\widehat{\alpha}_{r,3}\) prefer incremental or status‐quo messaging.
+    \end{itemize}
+
+  \item \textbf{Party‐Level Profiles:}  
+    Similarly, the party intercepts \(\widehat{\delta}_{q,1},\widehat{\delta}_{q,2},\widehat{\delta}_{q,3}\) represent how supporters of Party \(q\) differ along each latent dimension.  
+    \begin{itemize}
+      \item \emph{Interpretation:}  
+        A high \(\widehat{\delta}_{q,2}\) (environmental‐priority) paired with a low \(\widehat{\delta}_{q,1}\) (economic‐optimism) suggests that Party \(q\) supporters are more concerned about environmental issues but pessimistic about the economy.  If \(\widehat{\delta}_{q,3}\) is also high, they favor radical reform; if low, they prefer more gradual policy shifts.
+      \item \emph{Actionable Use:}  
+        A climate NGO could tailor communications aimed at Party \(q\) voters by highlighting policy packages that simultaneously address environmental targets and economic anxieties (e.g.\ “Investing in green infrastructure will create 10,000 jobs in your area”).  If \(\widehat{\delta}_{q,3}\) is high, the NGO could emphasize radical proposals (e.g.\ “transition taxes” or “rapid decarbonization”), whereas if \(\widehat{\delta}_{q,3}\) is moderate or low, messaging might stress pragmatic, incremental reforms (e.g.\ scaling up existing subsidies for renewables).
+    \end{itemize}
+
+  \item \textbf{Covariate‐Conditional Predictions:}  
+    Using the estimated slopes \(B = [\,\beta^{(\ell)}_p\,]\), one can predict average latent scores for hypothetical or key demographic profiles.  For instance:
+    \[
+      \widehat{\phi}\bigl(\text{Female},\,\text{age}=35\text{–}44,\,\text{L4+},\,\text{insec}=1\bigl) 
+      \;=\; 
+      \sum_{p} \beta^{(\phi)}_p\,X_p,
+    \]
+    and similarly for \(\widehat{\theta}\) and \(\widehat{\psi}\).  \emph{Action:} Identify demographic segments (e.g.\ younger low‐income individuals) whose predicted \(\widehat{\theta}\) is high but \(\widehat{\phi}\) is low.  Communications to that segment might foreground immediate economic benefits of green jobs or targeted energy‐bill relief funded by a carbon tax.  
+\end{itemize}
+\end{tcolorbox}
+
+
+\subsubsection{7.6. Reliability (McDonald’s $\omega$) and Communalities}
+\begin{itemize}
+  \item \textbf{Interpretation:}  $\omega^{(\ell)}$ quantifies internal consistency of the measurement items for latent trait $\ell\in\{\mathrm{opt},\mathrm{env},\mathrm{rad}\}$.  Communalities measure how much each item’s variance is explained by its latent factor.
+  \item \textbf{Strategic use:}  
+    \begin{itemize}
+      \item If $\omega^{(\mathrm{rad})}$ is low (e.g.\ $<0.6$), the radical‐reform scale may not reliably capture a coherent dimension.  Caution is needed when using $\hat{\zeta}_i$ to segment audiences or craft messaging—uncertain measurement implies risk of mis‐targeting.  
+      \item Examine item‐level communalities: items with low communality (e.g.\ “support for abolishing fossil subsidies” if it has low $\text{communality}_{\ell,\mathrm{rad}}$) might be dropped or reassessed in future surveys to sharpen the construct.  
+      \item High reliability ($\omega>0.8$) for the environmental scale indicates strong confidence in $\hat{\theta}_i$; strategic actors can more safely target individuals based on $\theta$ quintiles.
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{7.7. Residual Correlations ($\rho_{\phi\theta},\rho_{\phi\zeta},\rho_{\theta\zeta}$)}
+\begin{itemize}
+  \item \textbf{Interpretation:}  After accounting for covariates and group‐level effects, $\rho_{\ell_1 \ell_2}$ captures the remaining association between latent traits $\ell_1,\ell_2$.  For example, a positive $\rho_{\theta\zeta}$ means that respondents more concerned about the environment also tend to favor radical‐reform beyond what covariates explain.  
+  \item \textbf{Strategic use:}  
+    \begin{itemize}
+      \item If $\rho_{\theta\zeta}$ is high (e.g.\ $>0.5$), joint messaging that links environmental themes with radical policy proposals (e.g.\ “A Green New Deal that decentralizes energy”) may resonate strongly because the traits co‐occur.  
+      \item If $\rho_{\phi\zeta}$ is near zero, optimism (e.g.\ belief in technological solutions) and radical‐reform support are orthogonal: campaigns would need separate narratives (one hopeful, one systemic) rather than a unified frame.  
+      \item Use these correlations to anticipate \emph{cross‐trait spillovers}: a campaign emphasizing radical‐reform might also inadvertently shift environmental concern if $\rho_{\theta\zeta}$ is substantial.
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{7.8. Posterior Latent‐Trait Scores ($\hat{\phi}_i,\;\hat{\theta}_i,\;\hat{\zeta}_i$))}
+\begin{itemize}
+  \item \textbf{Interpretation:}  $\hat{\phi}_i,\hat{\theta}_i,\hat{\zeta}_i$ are each respondent’s estimated position on the three latent dimensions, averaged over the posterior draws.  
+  \item \textbf{Strategic use:}  
+    \begin{itemize}
+      \item \emph{Segmentation:}  Partition respondents into segments (e.g.\ low/medium/high environmental concern) based on $\hat{\theta}_i$ quantiles.  Tailor messages to each segment: those low on $\hat{\theta}_i$ may need persuasive, awareness‐raising content, while those high may receive mobilization requests.  
+      \item \emph{Targeted mobilization:}  Identify “double‐highs” with both $\hat{\theta}_i$ and $\hat{\zeta}_i$ above thresholds—these respondents are prime volunteers for aggressive climate advocacy.  
+      \item \emph{Coalition building:}  Detect respondents with high $\hat{\phi}_i$ but moderate $\hat{\theta}_i$: they are optimistic about solutions but not yet deeply concerned; messaging that ties technological optimism to environmental imperatives (e.g.\ “future‐proofing jobs with renewables”) could bridge them into the climate coalition.
+    \end{itemize}
+\end{itemize}
+
+\vspace{1em}
+\textcolor{red}{TO INCORPORATE!}
+
+\section{Substantive Interpretation}
+
+
+
+
+\subsection{Visualizations to Guide Strategy}
+
+Below are recommended plots and dashboards that translate parameter estimates into intuitive guidance:
+
+\begin{enumerate}
+  \item \textbf{Region‐Level 3D Latent Plot:}  
+    \begin{itemize}
+      \item \emph{Plot:}  A three‐dimensional scatterplot (or pairwise 2D panels) of \(\bigl(\widehat{\alpha}_{r,1},\,\widehat{\alpha}_{r,2},\,\widehat{\alpha}_{r,3}\bigr)\) for \(r=1,\dots,10\).  The axes are economic‐optimism (\(\phi\)), environmental‐priority (\(\theta\)), and radical‐reform (\(\psi\)).  
+      \item \emph{Usage:}  Identify clusters of regions that share similar profiles.  For example, a cluster of northern industrial regions might show low \(\widehat{\alpha}_{r,2}\) but moderate \(\widehat{\alpha}_{r,1}\) and low \(\widehat{\alpha}_{r,3}\).  The NGO can then segment its outreach:  
+        \begin{itemize}
+          \item \emph{High‐\(\theta\), low‐\(\phi\)} regions: emphasize job creation in clean energy.  
+          \item \emph{High‐\(\psi\)} regions: promote bold policy platforms (e.g.\ “net‐zero agenda by 2035”).  
+          \item \emph{Low‐\(\theta\), low‐\(\psi\)} regions: use incremental messaging (e.g.\ “energy‐efficiency grants”).
+        \end{itemize}
+    \end{itemize}
+
+  \item \textbf{Party‐Level Radar (Spider) Chart:}  
+    \begin{itemize}
+      \item \emph{Plot:}  For each major party \(q\), draw a radar chart with three spokes (economic‐optimism, environmental‐priority, radical‐reform).  Plot \(\widehat{\delta}_{q,1}\), \(\widehat{\delta}_{q,2}\), \(\widehat{\delta}_{q,3}\) on each spoke.  
+      \item \emph{Usage:}  Instantly compare how different parties’ supporters orient along the three dimensions.  For example, if the Greens have high \(\widehat{\delta}_{q,2}\) and high \(\widehat{\delta}_{q,3}\) but low \(\widehat{\delta}_{q,1}\), the NGO knows to frame environmental messaging as both urgent and structurally transformative to maintain resonance with that base.
+    \end{itemize}
+
+  \item \textbf{Covariate Effects Heatmap:}  
+    \begin{itemize}
+      \item \emph{Plot:}  A heatmap where rows are covariates (gender, each age bracket, each education dummy, insecurity) and columns are latent outcomes (\(\phi,\theta,\psi\)).  The cell values are the posterior means \(\beta^{(\ell)}_p\).  
+      \item \emph{Usage:}  Highlight which demographics are most influential on each latent.  For instance, a large negative \(\beta^{(\phi)}_{\text{insec}}\) suggests high insecurity strongly depresses economic‐optimism; large positive \(\beta^{(\theta)}_{\text{edu},L4+}\) indicates high‐educated respondents prioritize the environment.  The NGO can then target:  
+        \begin{itemize}
+          \item Low‐insecurity audiences with reassurance around short‐term economic gains of green policies.  
+          \item High‐educated segments with more technical, data‐driven environmental arguments.
+        \end{itemize}
+    \end{itemize}
+
+  \item \textbf{Latent Correlation Matrix and Network Diagram:}  
+    \begin{itemize}
+      \item \emph{Plot:}  Display the posterior median correlation matrix \(\widehat{\Omega}\) among \((\phi,\theta,\psi)\).  Alternatively, present a network diagram where nodes are the three latents and edge widths represent \(\rho_{\ell\ell'}\).  
+      \item \emph{Usage:}  A strong positive \(\widehat{\rho}_{\phi\theta}\) implies those who are more optimistic economically also care about the environment—thus messaging that connects environmental action to economic opportunity will likely “kill two birds with one stone.”  If \(\widehat{\rho}_{\theta\psi}\) is low or negative, it suggests that those prioritizing the environment may not necessarily favor radical reform.  Hence, for that subgroup, emphasize incremental environmental policy rather than radical system overhaul.
+    \end{itemize}
+
+  \item \textbf{Predicted Latent Distributions for Key Demographics:}  
+    \begin{itemize}
+      \item \emph{Plot:}  Kernel‐density estimates or histogram overlays of \(\phi\), \(\theta\), and \(\psi\) for selected subpopulations (e.g.\ “Women aged 25–34 with Level 4+ education and low insecurity”).  Use posterior draws to simulate the latent distribution conditional on specific \(X\).  
+      \item \emph{Usage:}  By comparing these distributions, the NGO can identify, for each subpopulation, whether they are more environment‐concerned than economically optimistic, or vice versa.  If \(\psi\) is skewed right in a given subgroup, it signals receptivity to radical messages—so communications for that subgroup can emphasize systemic change.  If \(\psi\) is skewed left, communications should downplay radical rhetoric.
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Message Framing Based on Latent Dimensions}
+
+\begin{itemize}
+  \item \textbf{High \(\theta\), Low \(\phi\):}  
+    \begin{itemize}
+      \item \emph{Insight:}  Audiences care about the environment but are worried about the economy.
+      \item \emph{Strategic Communication:}  Emphasize co‐benefits—“Green infrastructure projects will generate 5,000 jobs and reduce household energy bills.”  Use testimonials from local workers in renewable sectors.  
+      \item \emph{Key Parameters:}  Regions/parties with \(\widehat{\alpha}_{r,2} \gg \widehat{\alpha}_{r,1}\) or \(\widehat{\delta}_{q,2} \gg \widehat{\delta}_{q,1}\).  
+      \item \emph{Visualization:}  Bar chart comparing \(\widehat{\alpha}_{r,1}\) vs \(\widehat{\alpha}_{r,2}\) for target regions.
+    \end{itemize}
+
+  \item \textbf{High \(\phi\), Low \(\theta\):}  
+    \begin{itemize}
+      \item \emph{Insight:}  Audiences are optimistic about the economy but relatively unconcerned about the environment.
+      \item \emph{Strategic Communication:}  Frame environmental action as an “insurance policy”—“Invest now in green technology to ensure economic stability in 10 years.”  Highlight risk‐mitigation (e.g.\ rising insurance costs from extreme weather).  
+      \item \emph{Key Parameters:}  \(\widehat{\alpha}_{r,1} \gg \widehat{\alpha}_{r,2}\), \(\widehat{\delta}_{q,1} \gg \widehat{\delta}_{q,2}\).  
+      \item \emph{Visualization:}  Scatterplot of \((\widehat{\alpha}_{r,1}, \widehat{\alpha}_{r,2})\) with quadrants labeled (e.g.\ “Economy‐Only,” “Environment‐Only,” “Both,” “Neither”).
+    \end{itemize}
+
+  \item \textbf{High \(\psi\) (Radical‐Reform Orientation):}  
+    \begin{itemize}
+      \item \emph{Insight:}  Audiences want systemic change and are open to bold solutions.
+      \item \emph{Strategic Communication:}  Use language like “transform,” “revolutionize,” or “break free from outdated systems.”  Emphasize large‐scale policy proposals (e.g.\ “100\% renewable electricity by 2030”) and connect climate to social justice narratives.  
+      \item \emph{Key Parameters:}  Regions/parties with \(\widehat{\alpha}_{r,3}\gg0\) or \(\widehat{\delta}_{q,3}\gg0\); demographic subgroups with \(\beta^{(\psi)}_p>0\) for relevant covariates (e.g.\ younger, highly educated).  
+      \item \emph{Visualization:}  Histogram of \(\widehat{\psi}_i\) for a target demographic to see the proportion with strongly positive latent scores.
+    \end{itemize}
+
+  \item \textbf{Low \(\psi\) (Status‐Quo Preference):}  
+    \begin{itemize}
+      \item \emph{Insight:}  Audiences prefer incremental change or maintaining existing institutions.
+      \item \emph{Strategic Communication:}  Frame messages in terms of “practical steps” (“install an LED bulb”—“reduce bills now”), “build on what works,” or “enhance existing policies.”  Avoid radical rhetoric that might alienate this group.  
+      \item \emph{Key Parameters:}  \(\widehat{\alpha}_{r,3}\ll0\), \(\widehat{\delta}_{q,3}\ll0\), negative \(\beta^{(\psi)}_{\text{age}=65+}\), etc.  
+      \item \emph{Visualization:}  Boxplot of \(\widehat{\psi}_i\) across age‐bracket subgroups to identify which demographics lean status quo.
+    \end{itemize}
+\end{itemize}
+
+\end{document}

@@ -1,0 +1,361 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage[top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{tcolorbox}
+\usepackage{multirow,booktabs,graphicx,enumerate,float,fancyhdr,amsmath,amssymb,tcolorbox,xcolor,array,makecell}
+\setlength{\parindent}{0in}
+\setlength{\parskip}{1em}
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\footnotesize Bayesian Modelling - Research Note: Diagnostic Plots \& Metrics}
+\rhead{\footnotesize Henry Baker}
+\cfoot{\footnotesize \thepage}
+\newtcolorbox{redbox}{colback=red!10!white,colframe=red!80!black,fonttitle=\bfseries,title=NB!,sharp corners}
+\begin{document}
+
+\section{Metrics}
+
+\subsection{AME Slopes}
+
+\begin{tabular}{lll}
+\toprule
+latent & covariate & mean \\
+\midrule
+θ (Environment) & gender & -0.0220094122856175 \\
+θ (Environment) & age\_65plus & -0.1940736152 \\
+θ (Environment) & age\_55\_64 & -0.189976864125 \\
+θ (Environment) & age\_45\_54 & -0.180787048675 \\
+θ (Environment) & age\_35\_44 & -0.0304213987946275 \\
+θ (Environment) & age\_25\_34 & -0.0034339122381375 \\
+θ (Environment) & edu\_L4plus & 0.0570227088021 \\
+θ (Environment) & edu\_L3 & -0.04862127052645 \\
+θ (Environment) & edu\_L2 & -0.00673084834027 \\
+θ (Environment) & edu\_L1 & 0.053251872939425 \\
+θ (Environment) & edu\_appr & -0.11016527013225 \\
+θ (Environment) & edu\_other & -0.033671604392775 \\
+θ (Environment) & insecurity & 0.15484167375 \\
+φ (Optimism) & gender & -0.1481503115 \\
+φ (Optimism) & age\_65plus & -0.376973703 \\
+φ (Optimism) & age\_55\_64 & -0.31415569975 \\
+φ (Optimism) & age\_45\_54 & -0.25130134975 \\
+φ (Optimism) & age\_35\_44 & -0.004019073094585 \\
+φ (Optimism) & age\_25\_34 & 0.067527275068975 \\
+φ (Optimism) & edu\_L4plus & 0.082493690462405 \\
+φ (Optimism) & edu\_L3 & -0.1655127371575 \\
+φ (Optimism) & edu\_L2 & -0.101512583669826 \\
+φ (Optimism) & edu\_L1 & -0.09952840314815 \\
+φ (Optimism) & edu\_appr & -0.129863934597175 \\
+φ (Optimism) & edu\_other & -0.09975788134055 \\
+φ (Optimism) & insecurity & 0.0478931740465 \\
+ψ (Radical-Reform) & gender & 0.03727586962025 \\
+ψ (Radical-Reform) & age\_65plus & 0.260535524 \\
+ψ (Radical-Reform) & age\_55\_64 & 0.2160448815 \\
+ψ (Radical-Reform) & age\_45\_54 & 0.201634768925 \\
+ψ (Radical-Reform) & age\_35\_44 & 0.112732781575 \\
+ψ (Radical-Reform) & age\_25\_34 & 0.06089773963935 \\
+ψ (Radical-Reform) & edu\_L4plus & -0.0592317933274 \\
+ψ (Radical-Reform) & edu\_L3 & 0.015376352254495 \\
+ψ (Radical-Reform) & edu\_L2 & -0.0170140118205 \\
+ψ (Radical-Reform) & edu\_L1 & -0.015333605847827 \\
+ψ (Radical-Reform) & edu\_appr & 0.055974166972275 \\
+ψ (Radical-Reform) & edu\_other & 0.0075856864135625 \\
+ψ (Radical-Reform) & insecurity & 0.0059260367481575 \\
+\bottomrule
+\end{tabular}
+
+\subsection{Communalities\_uniqueness}
+
+\begin{tabular}{llll}
+\toprule
+block & item & comm\_mean & uniq\_mean \\
+\midrule
+Environment & 1 & 0.7457503918044260 & 0.5122809360139830 \\
+Environment & 2 & 2.124180156064 & 0.14927536656507700 \\
+Environment & 3 & 0.09784672622878280 & 0.9104470770270630 \\
+Environment & 4 & 1.8176083097369800 & 0.20420996724142600 \\
+Environment & 5 & 1.6683159596341500 & 0.2340706434500950 \\
+Optimism & 1 & 1.260533962294710 & 0.15270304120196200 \\
+Optimism & 2 & 1.0593621387105000 & 0.2495808695576680 \\
+Optimism & 3 & 0.857179013159624 & 0.360060134444414 \\
+Optimism & 4 & 1.1278879307737300 & 0.21410203416755600 \\
+Optimism & 5 & 0.48264696680695900 & 0.59776981539588 \\
+Optimism & 6 & 1.1770953575877100 & 0.18957613242853100 \\
+Radical-Reform & 1 & 2.56964558512 & 0.20775064918778400 \\
+Radical-Reform & 2 & 1.2661889756190900 & 0.3998586719233190 \\
+Radical-Reform & 3 & 0.5525090153613150 & 0.6323448575062990 \\
+Radical-Reform & 4 & 3.114773805579130 & 0.1614668930265680 \\
+Radical-Reform & 5 & 2.21345951155015 & 0.2458342554345290 \\
+Radical-Reform & 6 & 3.457784921065630 & 0.13831754157714300 \\
+Radical-Reform & 7 & 0.0635752839984555 & 0.9412263282489910 \\
+Radical-Reform & 8 & 0.30403904575080800 & 0.7632268496029800 \\
+\bottomrule
+\end{tabular}
+
+\subsection{Party Intercepts}
+
+\begin{tabular}{lllll}
+\toprule
+party\_id & party\_name & phi\_delta & theta\_delta & psi\_delta \\
+\midrule
+1 & Green & -0.09207865773439130 & 0.09167102608348930 & 0.0271151543450938 \\
+2 & Labour & 0.508411610506695 & 0.14131618932686500 & -0.2632307549025530 \\
+3 & Plaid Cymru & -0.10867135744821100 & 0.0070918189708702100 & 0.06577171880349690 \\
+4 & SNP & -0.1615361528867810 & -0.06801864770871790 & 0.0758321072743551 \\
+5 & Liberal Democrat & 0.20971612284510800 & 0.16881655349038100 & -0.13318479135840000 \\
+6 & Conservative & 0.2556390323025750 & 0.030229985286406500 & -0.009663723200317010 \\
+7 & Reform UK & -0.2327761768468960 & -0.22108472932424400 & 0.13025428469747100 \\
+8 & Another party & -0.2788793123724940 & -0.04352149522658920 & 0.07350064449447770 \\
+9 & Don’t know & 0.0748760782159426 & 0.030123557417852400 & 0.010429581456439700 \\
+10 & Won’t vote & 0.010292392978015100 & -0.06444282052560790 & -0.07301431246827970 \\
+\bottomrule
+\end{tabular}
+
+\subsection{Region Intercepts}
+
+\begin{tabular}{lllll}
+\toprule
+region\_id & region\_name & phi\_alpha & theta\_alpha & psi\_alpha \\
+\midrule
+1 & Yorkshire \& the Humber & -0.05272028038064310 & 0.0015566383108383900 & -0.0025574783442780200 \\
+2 & West Midlands & -0.03338410173766430 & -0.005747270571925000 & -0.002455861576736810 \\
+3 & Scotland & -0.002992351683996740 & -0.036274789591937900 & -0.005641420601505440 \\
+4 & Wales & -0.02071680771876380 & -0.06646533922639880 & -0.005289050623863360 \\
+5 & North West & 0.005512534510508590 & 0.012784794231400000 & 0.003931495297200780 \\
+6 & Eastern & 0.02026951641171040 & 0.04675218472283900 & 0.0037726692067696600 \\
+7 & South West & -0.03920678024403320 & -0.0021016959393206000 & 0.000621759385441694 \\
+8 & East Midlands & 0.03584977519520820 & -0.0049804990509344200 & 0.005151266299976850 \\
+9 & London & 0.11171214478499300 & 0.07604660370756040 & 0.0013561729327633400 \\
+10 & South East & -0.01616344184079070 & -0.017265336145447500 & 0.000181004544565002 \\
+\bottomrule
+\end{tabular}
+
+\subsection{$R^2$ Summary}
+
+\begin{tabular}{ll}
+\toprule
+block & mean\_R2 \\
+\midrule
+R2\_env & 0.39067011125 \\
+R2\_opt & 0.613330542 \\
+R2\_rad & 0.22076207625 \\
+\bottomrule
+\end{tabular}
+
+\subsection{Reliabilities}
+
+\begin{tabular}{ll}
+\toprule
+block & mean\_omega \\
+\midrule
+omega\_env & 0.8979101883020290 \\
+omega\_opt & 0.9364559247129030 \\
+omega\_rad & 0.9324758784902900 \\
+\bottomrule
+\end{tabular}
+
+\subsection{Residual Correlations}
+
+\begin{tabular}{ll}
+\toprule
+pair & correlation \\
+\midrule
+$\phi$--$\theta$ & 0.374990569 \\
+$\phi$--$\psi$ & -0.47703866 \\
+$\theta$--$\psi$ & -0.2776827001386080 \\
+\bottomrule
+\end{tabular}
+
+\subsection{Slopes Summary}
+
+\begin{tabular}{ll}
+\toprule
+param & mean \\
+\midrule
+B[1,10] & -0.09952840314815 \\
+B[1,11] & -0.129863934597175 \\
+B[1,12] & -0.09975788134055 \\
+B[1,13] & 0.0478931740465 \\
+B[1,1] & -0.1481503115 \\
+B[1,2] & -0.376973703 \\
+B[1,3] & -0.31415569975 \\
+B[1,4] & -0.25130134975 \\
+B[1,5] & -0.004019073094585 \\
+B[1,6] & 0.067527275068975 \\
+B[1,7] & 0.082493690462405 \\
+B[1,8] & -0.1655127371575 \\
+B[1,9] & -0.101512583669826 \\
+B[2,10] & 0.053251872939425 \\
+B[2,11] & -0.11016527013225 \\
+B[2,12] & -0.033671604392775 \\
+B[2,13] & 0.15484167375 \\
+B[2,1] & -0.0220094122856175 \\
+B[2,2] & -0.1940736152 \\
+B[2,3] & -0.189976864125 \\
+B[2,4] & -0.180787048675 \\
+B[2,5] & -0.0304213987946275 \\
+B[2,6] & -0.0034339122381375 \\
+B[2,7] & 0.0570227088021 \\
+B[2,8] & -0.04862127052645 \\
+B[2,9] & -0.00673084834027 \\
+B[3,10] & -0.015333605847827 \\
+B[3,11] & 0.055974166972275 \\
+B[3,12] & 0.0075856864135625 \\
+B[3,13] & 0.0059260367481575 \\
+B[3,1] & 0.03727586962025 \\
+B[3,2] & 0.260535524 \\
+B[3,3] & 0.2160448815 \\
+B[3,4] & 0.201634768925 \\
+B[3,5] & 0.112732781575 \\
+B[3,6] & 0.06089773963935 \\
+B[3,7] & -0.0592317933274 \\
+B[3,8] & 0.015376352254495 \\
+B[3,9] & -0.0170140118205 \\
+\bottomrule
+\end{tabular}
+
+
+\section{Plots}
+
+\begin{tcolorbox}
+    Key diagnostic metrics :
+    \begin{itemize}
+        \item Rhat - see histogram plot: no problems
+        \item no parameters with ESS bulk below 200
+        \item no parameters with ESS tail below 200
+        \item no chains with divergent transitions
+        \item no chains that hit max treedepth
+        \item no chains with BMFI below 0.2
+    \end{itemize}
+\end{tcolorbox}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{category_frequencies_optimism_item1.png}
+    \label{fig:enter-label}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{category_frequencies_radical_item1.png}
+    \label{fig:enter-label}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{densities_selected_params.png}
+    \label{fig:enter-label}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{item_level_means_environment.png}
+    \label{fig:enter-label}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{item_level_means_optimism.png}
+    \label{fig:enter-label}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{item_level_radicalreform.png}
+    \label{fig:enter-label}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{posterior_predictive_environment_density.png}
+    \caption{Enter Caption}
+    \label{fig:enter-label}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{posterior_predictive_environment_person_means.png}
+    \label{fig:enter-label}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{posterior_predictive_optimism_density.png}
+    \label{fig:enter-label}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.75\linewidth]{posterior_predictive_optimism_person_means.png}
+    \label{fig:enter-label}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{posterior_predictive_radical_density.png}
+    \label{fig:enter-label}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{posterior_predictive_radical_person_means.png}
+    \label{fig:enter-label}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{prior_predictive_environment_density.png}
+    \label{fig:enter-label}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{prior_predictive_environment_person_means.png}
+    \label{fig:enter-label}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{prior_predictive_optimism_density.png}
+    \label{fig:enter-label}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{prior_predictive_optimism_person_means.png}
+    \label{fig:enter-label}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{prior_predictive_radical_density.png}
+    \label{fig:enter-label}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{prior_predictive_radical_person_means.png}
+    \label{fig:enter-label}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{r2_posterior_density.png}
+    \label{fig:enter-label}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{rhat_histogram.png}
+    \label{fig:enter-label}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{traceplots_selected_params.png}
+    \label{fig:enter-label}
+\end{figure}
+
+\
+
+\end{document}
