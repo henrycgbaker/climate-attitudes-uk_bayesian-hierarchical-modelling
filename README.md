@@ -4,7 +4,7 @@
 [![Paper - Technical](https://img.shields.io/badge/Paper-Full_Methodology-0969da)](paper/main_technical.pdf)
 ![Submitted](https://img.shields.io/badge/Submitted-June_2025-grey)
 
-A Bayesian hierarchical latent trait model for analysing UK public attitudes toward climate policy.
+A Bayesian hierarchical latent trait model for analysing UK public attitudes toward climate policy, using proprietary polling 2025 data.
 
 ## Overview
 
@@ -71,7 +71,7 @@ Rscript -e "install.packages('renv'); renv::restore()"
 ### Running the Analysis
 
 ```bash
-# 1. Generate synthetic data (if real data not available)
+# 1. Generate synthetic data (proprietary data not available)
 Rscript R/00_generate_synthetic_data.R
 
 # 2. Prepare data for Stan
@@ -89,7 +89,7 @@ Rscript R/04_quantities_of_interest.R
 
 ## Data Availability
 
-The original survey data is from the [Looking for Growth](https://tracker.lookingforgrowth.uk/) academic partnership and is **proprietary**. It cannot be included in this repository.
+The original survey data is from the [Looking for Growth](https://tracker.lookingforgrowth.uk/) academic partnership and is proprietary, so is not included in this repository.
 
 For demonstration and code testing, synthetic data can be generated using `R/00_generate_synthetic_data.R`. The synthetic data matches the expected column structure but uses simulated responses based on correlated latent traits.
 
